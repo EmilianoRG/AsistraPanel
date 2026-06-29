@@ -82,6 +82,7 @@ class SiteController extends Controller {
   }
 
   public function actionVerificarRecuperacion(): string {
+    echo json_encode(Util::getRecuperaciones(), JSON_PRETTY_PRINT); exit;
     return $this->render('verificarRecuperacion', ['data' => Util::getRecuperaciones()]);
   }
 }
