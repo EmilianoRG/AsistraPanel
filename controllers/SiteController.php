@@ -83,18 +83,12 @@ class SiteController extends Controller {
 
   public function actionVerificarRecuperacion($fecha = null): string {
 //    echo json_encode(Util::getRecuperaciones($fecha), JSON_PRETTY_PRINT); exit;
-    return $this->render('verificarRecuperacion', ['data' => Util::getRecuperaciones($fecha)]);
+    if (!$fecha) {
+      $fecha = date('Y-m-d');
+    }
+    return $this->render('verificarRecuperacion', [
+      'fechaHoy' => $fecha,
+      'data' => Util::getRecuperaciones($fecha)
+    ]);
   }
 }
-
-/*
-[
-{
-"Institucion": "2sis Background",
-"BD": "checatec_2sis_background",
-"Fecha": "2026-04-14",
-"Cantidad_Personal": 13,
-"Cantidad_Personal_Recuperacion_Incompleta": 0
-}
-]
-*/

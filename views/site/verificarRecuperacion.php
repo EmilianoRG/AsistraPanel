@@ -4,10 +4,10 @@ use app\widgets\RecuperacionGrid;
 use yii\web\View;
 
 /** @var View $this */
+/** @var string $fechaHoy */
 /** @var array $data */
 
 $this->title = 'Monitoreo de Recuperación';
-$fechaHoy = date('Y-m-d');
 $fechaActual = Util::formatDate($fechaHoy);
 
 echo <<<HTML
