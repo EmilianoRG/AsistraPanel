@@ -17,10 +17,10 @@ class LoginForm extends Model {
   public string $username = '';
   public string $password = '';
   public bool $rememberMe = true;
-  private User|null $_user = null;
+  private $_user = null;
   private bool $_userLoaded = false;
 
-  public function __construct(private readonly Security $security, $config = []) {
+  public function __construct(Security $security, $config = []) {
     parent::__construct($config);
   }
 
@@ -42,7 +42,7 @@ class LoginForm extends Model {
    * @param string $attribute the attribute currently being validated
    * @param array $params the additional name-value pairs given in the rule
    */
-  public function validatePassword(string $attribute, array|null $params): void {
+  public function validatePassword(string $attribute, $params): void {
     if (!$this->hasErrors()) {
       $user = $this->getUser();
 
@@ -69,7 +69,7 @@ class LoginForm extends Model {
    *
    * @return User|null
    */
-  public function getUser(): User|null {
+  public function getUser() {
     if (!$this->_userLoaded) {
       $this->_user = User::findByUsername($this->username);
       $this->_userLoaded = true;
