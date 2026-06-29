@@ -15,7 +15,7 @@ class User extends BaseObject implements IdentityInterface {
       'id' => '100',
       'username' => 'admin',
       // password: admin
-      'passwordHash' => '$2y$13$gYAywKSkhfZDq9FLNdm7buKnvlRxDexf5xipSMAxQPDUxpaptmZJu',
+      'passwordHash' => '$2y$12$pQh4B6.cbE2vOvuiaHBS7e8HNEJf8t2PrfhF4cOWNtFPJI9J8jT7u',
       'authKey' => 'test100key',
       'accessToken' => '100-token',
     ],
