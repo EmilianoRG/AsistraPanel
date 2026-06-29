@@ -69,7 +69,7 @@ class Util {
     ];
   }
 
-  public static function getRecuperacionesBackup($fecha = null): \yii\db\DataReader|array {
+  public static function getRecuperacionesBackup($fecha = null) {
     if (!$fecha) {
       $fecha = date('Y-m-d');
     }
