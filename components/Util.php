@@ -57,14 +57,19 @@ class Util {
 //        'url' => 'soporte',
 //      ],
       [
-        'nombre' => '2sis Background',
-        'schema' => 'checatec_2sis_background',
-        'url' => 'checatec',
+        'nombre' => 'Asistra 2sis',
+        'schema' => 'asistra_2sis',
+        'url' => 'asistra',
       ],
+//      [
+//        'nombre' => '2sis Background',
+//        'schema' => 'checatec_2sis_background',
+//        'url' => 'checatec',
+//      ],
     ];
   }
 
-  public static function getRecuperaciones($fecha = null): \yii\db\DataReader|array {
+  public static function getRecuperacionesBackup($fecha = null): \yii\db\DataReader|array {
     if (!$fecha) {
       $fecha = date('Y-m-d');
     }
@@ -138,6 +143,83 @@ class Util {
       $db->createCommand("DEALLOCATE PREPARE stmt;")->execute();
 
       // devolver un array con el resultado
+      return $resultados;
+    } catch (\Exception $ex) {
+      return ['errorMessage' => $ex->getMessage()];
+    }
+  }
+
+  public static function getRecuperaciones($fecha = null): array {
+    if (!$fecha) {
+      $fecha = date('Y-m-d');
+    }
+    // validar que la fecha tenga el formato correcto
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+      return ['errorMessage' => 'Fecha no válida. El formato debe ser YYYY-MM-DD.'];
+    }
+    $select = [
+      'inicio_ejecucion',
+      'fin_ejecucion',
+      'tiempo_transcurrido',
+      'fecha_inicio_a_procesar',
+      'fecha_fin_a_procesar',
+      'total_personal',
+      'observaciones',
+      'numero_errores',
+    ];
+    $select = implode(', ', $select);
+    try {
+      $db = Yii::$app->db;
+      $resultados = [];
+      foreach (self::getProyectos() as $proyecto) {
+        $resultado = [
+          'institucionNombre' => $proyecto['nombre'],
+          'baseDatosNombre' => $proyecto['schema'],
+          'fecha' => null,
+          'totalEmpleados' => 0,
+          'analizados' => 0,
+          'recuperados' => 0,
+          'incompletos' => 0,
+          'inicioEjecucion' => null,
+          'finEjecucion' => null,
+          'tiempoTranscurrido' => null,
+          'fechaInicioAProcesar' => null,
+          'fechaFinAProcesar' => null,
+          'numeroErrores' => 0,
+          'encontrado' => false,
+        ];
+        $data = $db->createCommand("SELECT {$select} FROM {$proyecto['schema']}.procesos_background WHERE tipo_proceso = :tipo_proceso AND DATE(inicio_ejecucion) = :fecha LIMIT 1")
+          ->bindValues([
+            ':tipo_proceso' => 1,
+            ':fecha' => $fecha,
+          ])
+          ->queryOne();
+        if (!$data) {
+          // intentar buscar el último registro de recuperación antes de la fecha dada
+          $data = $db->createCommand("SELECT {$select} FROM {$proyecto['schema']}.procesos_background WHERE tipo_proceso = :tipo_proceso AND DATE(inicio_ejecucion) < :fecha ORDER BY fecha_inicio_a_procesar DESC LIMIT 1")
+            ->bindValues([
+              ':tipo_proceso' => 1,
+              ':fecha' => $fecha,
+            ])
+            ->queryOne();
+        }
+        if ($data) {
+          $analisis = json_decode($data['observaciones'], true);
+          $resultado['fecha'] = date('Y-m-d', strtotime($data['inicio_ejecucion']));
+          $resultado['totalEmpleados'] = $data['total_personal'];
+          $resultado['analizados'] = $analisis['asistenciasTotalesAnalizadas'] ?? 0;
+          $resultado['recuperados'] = $analisis['asistenciasProcesadas'] ?? 0;
+          $resultado['incompletos'] = $analisis['asistenciasTotalesAnalizadas'] - $analisis['asistenciasProcesadas'] ?? 0;
+          $resultado['inicioEjecucion'] = $data['inicio_ejecucion'];
+          $resultado['finEjecucion'] = $data['fin_ejecucion'];
+          $resultado['tiempoTranscurrido'] = $data['tiempo_transcurrido'];
+          $resultado['fechaInicioAProcesar'] = $data['fecha_inicio_a_procesar'];
+          $resultado['fechaFinAProcesar'] = $data['fecha_fin_a_procesar'];
+          $resultado['numeroErrores'] = $data['numero_errores'];
+          $resultado['encontrado'] = true;
+        }
+        $resultados[] = $resultado;
+      }
       return $resultados;
     } catch (\Exception $ex) {
       return ['errorMessage' => $ex->getMessage()];
@@ -250,5 +332,51 @@ class Util {
     return "{$hours}:{$minutes}" . ($addSeconds ? ":{$seconds}" : '') . ($useMeridien ? " {$meridiem}" : '');
 
     // </editor-fold>
+  }
+
+  public static function obtenerTiempoTranscurrido($inicio, $fin): string {
+    $fechaInicio = new \DateTime($inicio);
+    $fechaFin    = new \DateTime($fin);
+
+    // 1. Calculamos los segundos totales de diferencia
+    $segundosTranscurridos = $fechaFin->getTimestamp() - $fechaInicio->getTimestamp();
+
+    if ($segundosTranscurridos <= 0) {
+      return '0s';
+
+//      return [
+//        'formato_corto' => '0s',
+//        'segundos' => 0
+//      ];
+    }
+
+    // 2. Obtenemos el desglose del intervalo
+    $diferencia = $fechaInicio->diff($fechaFin);
+    $resultadoTexto = [];
+
+    // Sumamos los días multiplicados por 24 a las horas por si pasa de un día a otro
+    $horasTotales = ($diferencia->days * 24) + $diferencia->h;
+
+    // Agregar horas si existen
+    if ($horasTotales > 0) {
+      $resultadoTexto[] = $horasTotales . 'h';
+    }
+
+    // Agregar minutos si existen
+    if ($diferencia->i > 0) {
+      $resultadoTexto[] = $diferencia->i . 'm';
+    }
+
+    // Agregar segundos si existen
+    if ($diferencia->s > 0) {
+      $resultadoTexto[] = $diferencia->s . 's';
+    }
+
+    return implode(' ', $resultadoTexto);
+
+//    return [
+//      'formato_corto' => implode(' ', $resultadoTexto),
+//      'segundos'      => $segundosTranscurridos
+//    ];
   }
 }

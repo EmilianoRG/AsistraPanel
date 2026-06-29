@@ -1,38 +1,99 @@
 <?php
 namespace app\widgets;
 
+use app\components\Util;
 use yii\base\Widget;
 
 class RecuperacionCard extends Widget {
   public $institucionNombre;
   public $baseDatosNombre;
   public $fecha;
+  public $totalEmpleados;
+  public $analizados;
   public $recuperados;
   public $incompletos;
-  public $desfazado = false;
+  public $inicioEjecucion;
+  public $finEjecucion;
+  public $tiempoTranscurrido;
+  public $numeroErrores;
+  public $desfasado = false;
 
   public function init() {
     parent::init();
   }
 
   public function run(): string {
+    $fechaUltimoEnvio = 'Hoy';
+    $fechaEjecucion = /*Util::formatDate($this->inicioEjecucion) . ' ' . */ Util::formatTime($this->inicioEjecucion);
+    $tiempoTranscurrido = Util::obtenerTiempoTranscurrido($this->inicioEjecucion, $this->finEjecucion);
+
+    $class = '';
+    $borderClass = '';
+    $statusText = '';
+    $statusClass = '';
+    $statusTextClass = '';
+    $statusIcon = '';
+    $tecClass = '';
+    $tecIcon = '';
+    $tecEmpleadosClass = '';
+    $tecFechaClass = '';
+    $alerta = '';
+    $erroresDiv = '';
+
+    if ($this->desfasado) {
+      $fechaUltimoEnvio = Util::formatDate($this->fecha);
+
+      $class = 'danger';
+      $borderClass = 'border-danger border-opacity-50';
+      $statusText = 'Desfasado';
+      $statusClass = 'blink-danger';
+      $statusTextClass = 'white';
+      $statusIcon = 'fa-circle-exclamation';
+      $tecClass = 'bg-danger bg-opacity-10 text-danger border-danger border-opacity-20';
+      $tecIcon = 'fa-solid fa-triangle-exclamation';
+      $tecEmpleadosClass = 'badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25';
+      $tecFechaClass = 'fw-extrabold text-decoration-underline';
+      $alerta = <<<HTML
+      <div class="d-flex justify-content-between mb-1 bg-danger bg-opacity-10 p-2 rounded">
+        <span class="text-danger fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i> Desfase Crítico:</span>
+        <span class="fw-bold text-danger">No es de hoy</span>
+      </div>
+      HTML;
+    } else {
+      $class = 'success';
+      $statusText = 'Recuperado';
+      $statusClass = 'status-active';
+      $statusTextClass = 'success';
+      $statusIcon = 'fa-circle-check';
+      $tecIcon = 'fa-solid fa-school';
+      $tecEmpleadosClass = 'badge bg-light text-secondary border';
+    }
+    if ($this->numeroErrores > 0) {
+      $erroresDiv = <<<HTML
+      <div class="d-flex justify-content-between mb-1 bg-danger bg-opacity-10 p-2 rounded">
+        <span class="text-danger fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Número de Errores:</span>
+        <span class="fw-bold text-danger">{$this->numeroErrores}</span>
+      </div>
+      HTML;
+    }
+
     return <<<HTML
     <div class="col-lg-4 col-md-6">
-      <div class="asistra-card shadow-sm">
-        <div class="card-accent-bar accent-success"></div>
+      <div class="asistra-card shadow-sm {$borderClass}">
+        <div class="card-accent-bar accent-{$class}"></div>
           
-        <div class="status-indicator status-active">
-          <i class="fa-solid fa-circle-check text-success"></i> Sincronizado
+        <div class="status-indicator {$statusClass}">
+          <i class="fa-solid {$statusIcon} text-{$statusTextClass}"></i> {$statusText}
         </div>
           
         <div class="p-4 pt-5">
           <div class="d-flex align-items-center gap-3 mb-3">
-            <div class="tec-logo-container">
-              <span class="text-success"><i class="fa-solid fa-school"></i></span>
+            <div class="tec-logo-container {$tecClass}">
+              <span class="text-{$class}"><i class="{$tecIcon}"></i></span>
             </div>
             <div>
               <h5 class="fw-bold mb-0">{$this->institucionNombre}</h5>
-              <span class="badge bg-light text-secondary border">500 Empleados</span>
+              <span class="{$tecEmpleadosClass}">{$this->totalEmpleados} Empleados</span>
             </div>
           </div>
   
@@ -41,35 +102,33 @@ class RecuperacionCard extends Widget {
           <div class="row g-2 mb-4">
             <div class="col-6">
               <div class="sync-metric">
-                <div class="sync-metric-val">12,430</div>
-                <div class="sync-metric-lbl">Total Sincros</div>
+                <div class="sync-metric-val">{$this->recuperados}/{$this->analizados}</div>
+                <div class="sync-metric-lbl">Recuperados</div>
               </div>
-              </div>
-              <div class="col-6">
-                <div class="sync-metric">
-                <div class="sync-metric-val text-success">Hoy</div>
+            </div>
+            <div class="col-6">
+              <div class="sync-metric">
+                <div class="sync-metric-val text-{$class} {$tecFechaClass}">{$fechaUltimoEnvio}</div>
                 <div class="sync-metric-lbl">Último Envío</div>
               </div>
             </div>
           </div>
   
           <div class="small mb-4">
+            {$alerta}
             <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted"><i class="fa-solid fa-microchip me-1"></i> Dispositivos:</span>
-              <span class="fw-semibold">3 Suprema (BS3-DB, BSL2)</span>
+              <span class="text-muted"><i class="fa-solid fa-clock-rotate-left me-1"></i> Hora de Ejecución:</span>
+              <span class="fw-bold text-{$class}"><span class="fecha-hoy-span"></span> {$fechaEjecucion}</span>
             </div>
             <div class="d-flex justify-content-between mb-1">
-              <span class="text-muted"><i class="fa-solid fa-clock-rotate-left me-1"></i> Última lectura:</span>
-              <span class="fw-bold text-success"><span class="fecha-hoy-span"></span> 10:58 AM</span>
+              <span class="text-muted"><i class="fa-solid fa-clock-rotate-left me-1"></i> Tiempo Transcurrido:</span>
+              <span class="fw-bold text-{$class}"><span class="transcurrido-span"></span> {$tiempoTranscurrido}</span>
             </div>
-            <div class="d-flex justify-content-between">
-              <span class="text-muted"><i class="fa-solid fa-network-wired me-1"></i> IP Local Servidor:</span>
-              <span class="font-monospace">192.168.10.22</span>
-            </div>
+            {$erroresDiv}
           </div>
         </div>
       </div>
     </div>
-HTML;
+    HTML;
   }
 }
