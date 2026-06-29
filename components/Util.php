@@ -6,65 +6,60 @@ use Yii;
 class Util {
   public static function getProyectos(): array {
     return [
-//      [
-//        'nombre' => '2sis Evoluciona',
-//        'schema' => 'proyectos2sis_2sis',
-//        'url' => '2sis',
-//      ],
-//      [
-//        'nombre' => 'IT Altamira',
-//        'schema' => 'proyectos2sis_tec_altamira',
-//        'url' => 'altamira',
-//      ],
-//      [
-//        'nombre' => 'IT Campeche',
-//        'schema' => 'proyectos2sis_tec_campeche',
-//        'url' => 'campeche',
-//      ],
-//      [
-//        'nombre' => 'IT Ciudad Victoria',
-//        'schema' => 'proyectos2sis_tec_cdvictoria',
-//        'url' => 'cdvictoria',
-//      ],
-//      [
-//        'nombre' => 'IT Chiná',
-//        'schema' => 'proyectos2sis_tec_china',
-//        'url' => 'china',
-//      ],
-//      [
-//        'nombre' => 'IT Comitancillo',
-//        'schema' => 'proyectos2sis_tec_comitancillo',
-//        'url' => 'comitancillo',
-//      ],
-//      [
-//        'nombre' => 'Entorno de Pruebas (Sandbox)',
-//        'schema' => 'proyectos2sis_tec_sandbox',
-//        'url' => 'sandbox',
-//      ],
-//      [
-//        'nombre' => 'IT San Marcos',
-//        'schema' => 'proyectos2sis_tec_sanmarcos',
-//        'url' => 'sanmarcos',
-//      ],
-//      [
-//        'nombre' => 'IT Zacatepec',
-//        'schema' => 'proyectos2sis_tec_zacatepec',
-//        'url' => 'zacatepec',
-//      ],
-//      [
-//        'nombre' => 'Soporte 2sis',
-//        'schema' => 'proyectos2sis_soporte',
-//        'url' => 'soporte',
-//      ],
       [
-        'nombre' => 'Asistra 2sis',
-        'schema' => 'asistra_2sis',
-        'url' => 'asistra',
+        'nombre' => '2sis Evoluciona',
+        'schema' => 'proyectos2sis_2sis',
+        'url' => '2sis',
+      ],
+      [
+        'nombre' => 'IT Altamira',
+        'schema' => 'proyectos2sis_tec_altamira',
+        'url' => 'altamira',
+      ],
+      [
+        'nombre' => 'IT Campeche',
+        'schema' => 'proyectos2sis_tec_campeche',
+        'url' => 'campeche',
+      ],
+      [
+        'nombre' => 'IT Ciudad Victoria',
+        'schema' => 'proyectos2sis_tec_cdvictoria',
+        'url' => 'cdvictoria',
+      ],
+      [
+        'nombre' => 'IT Chiná',
+        'schema' => 'proyectos2sis_tec_china',
+        'url' => 'china',
+      ],
+      [
+        'nombre' => 'IT Comitancillo',
+        'schema' => 'proyectos2sis_tec_comitancillo',
+        'url' => 'comitancillo',
+      ],
+      [
+        'nombre' => 'Entorno de Pruebas (Sandbox)',
+        'schema' => 'proyectos2sis_tec_sandbox',
+        'url' => 'sandbox',
+      ],
+      [
+        'nombre' => 'IT San Marcos',
+        'schema' => 'proyectos2sis_tec_sanmarcos',
+        'url' => 'sanmarcos',
+      ],
+      [
+        'nombre' => 'IT Zacatepec',
+        'schema' => 'proyectos2sis_tec_zacatepec',
+        'url' => 'zacatepec',
+      ],
+      [
+        'nombre' => 'Soporte 2sis',
+        'schema' => 'proyectos2sis_soporte',
+        'url' => 'soporte',
       ],
 //      [
-//        'nombre' => '2sis Background',
-//        'schema' => 'checatec_2sis_background',
-//        'url' => 'checatec',
+//        'nombre' => 'Asistra 2sis',
+//        'schema' => 'asistra_2sis',
+//        'url' => 'asistra',
 //      ],
     ];
   }
