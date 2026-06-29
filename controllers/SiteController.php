@@ -81,9 +81,9 @@ class SiteController extends Controller {
     return $this->goHome();
   }
 
-  public function actionVerificarRecuperacion(): string {
-//    echo json_encode(Util::getRecuperaciones(), JSON_PRETTY_PRINT); exit;
-    return $this->render('verificarRecuperacion', ['data' => Util::getRecuperaciones()]);
+  public function actionVerificarRecuperacion($fecha = null): string {
+//    echo json_encode(Util::getRecuperaciones($fecha), JSON_PRETTY_PRINT); exit;
+    return $this->render('verificarRecuperacion', ['data' => Util::getRecuperaciones($fecha)]);
   }
 }
 
