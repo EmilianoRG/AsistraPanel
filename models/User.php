@@ -5,7 +5,7 @@ use yii\base\BaseObject;
 use yii\web\IdentityInterface;
 
 class User extends BaseObject implements IdentityInterface {
-  public int|string $id = '';
+  public $id = '';
   public string $username = '';
   public string $passwordHash = '';
   public string $authKey = '';
@@ -32,14 +32,14 @@ class User extends BaseObject implements IdentityInterface {
   /**
    * {@inheritdoc}
    */
-  public static function findIdentity($id): static|null {
+  public static function findIdentity($id) {
     return isset(self::$_users[$id]) ? new static(self::$_users[$id]) : null;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function findIdentityByAccessToken($token, $type = null): static|null {
+  public static function findIdentityByAccessToken($token, $type = null) {
     foreach (self::$_users as $user) {
       if ($user['accessToken'] === $token) {
         return new static($user);
@@ -55,7 +55,7 @@ class User extends BaseObject implements IdentityInterface {
    * @param string $username
    * @return static|null
    */
-  public static function findByUsername(string $username): static|null {
+  public static function findByUsername(string $username) {
     foreach (self::$_users as $user) {
       if (strcasecmp($user['username'], $username) === 0) {
         return new static($user);
@@ -68,14 +68,14 @@ class User extends BaseObject implements IdentityInterface {
   /**
    * {@inheritdoc}
    */
-  public function getId(): int|string {
+  public function getId() {
     return $this->id;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAuthKey(): string|null {
+  public function getAuthKey() {
     return $this->authKey;
   }
 
