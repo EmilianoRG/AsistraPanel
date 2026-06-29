@@ -51,11 +51,13 @@ class Util {
         'schema' => 'proyectos2sis_tec_zacatepec',
         'url' => 'zacatepec',
       ],
-      [
-        'nombre' => 'Soporte 2sis',
-        'schema' => 'proyectos2sis_soporte',
-        'url' => 'soporte',
-      ],
+//      [
+//        'nombre' => 'Soporte 2sis',
+//        'schema' => 'proyectos2sis_soporte',
+//        'url' => 'soporte',
+//      ],
+
+
 //      [
 //        'nombre' => 'Asistra 2sis',
 //        'schema' => 'asistra_2sis',
