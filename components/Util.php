@@ -5,6 +5,9 @@ use Yii;
 
 class Util {
   public static function getProyectos(): array {
+    return Yii::$app->params['proyectos'] ?? [];
+
+    /*
     return [
       [
         'nombre' => '2sis Evoluciona',
@@ -56,14 +59,8 @@ class Util {
 //        'schema' => 'proyectos2sis_soporte',
 //        'url' => 'soporte',
 //      ],
-
-
-//      [
-//        'nombre' => 'Asistra Prueba',
-//        'schema' => 'asistra_prueba',
-//        'url' => 'asistra',
-//      ],
     ];
+    */
   }
 
   public static function getRecuperacionesBackup($fecha = null) {
@@ -165,15 +162,10 @@ class Util {
       'numero_errores',
     ];
     $select = implode(', ', $select);
-    $proyectos = self::getProyectos();
-    // ordenar el multiarray por fecha_inicio_a_procesar descendente
-    usort($proyectos, function ($a, $b) {
-      return strtotime($b['fecha_inicio_a_procesar'] ?? '1970-01-01') <=> strtotime($a['fecha_inicio_a_procesar'] ?? '1970-01-01');
-    });
     try {
       $db = Yii::$app->db;
       $resultados = [];
-      foreach ($proyectos as $proyecto) {
+      foreach (self::getProyectos() as $proyecto) {
         $resultado = [
           'institucionNombre' => $proyecto['nombre'],
           'baseDatosNombre' => $proyecto['schema'],

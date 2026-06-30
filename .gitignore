@@ -27,6 +27,7 @@ Thumbs.db
 /vagrant/
 /vendor/
 /config/db.php
+/config/params.php
 
 # custom web files
 /web/*
