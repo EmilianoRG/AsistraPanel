@@ -163,7 +163,7 @@ class Util {
       }
       // ordenar el multiarray por fecha_inicio_a_procesar descendente
       usort($resultados, function ($a, $b) {
-        return strtotime($b['fecha_inicio_a_procesar'] ?? '1970-01-01') <=> strtotime($a['fecha_inicio_a_procesar'] ?? '1970-01-01');
+        return strtotime($b['fechaInicioAProcesar'] ?? '1970-01-01') <=> strtotime($a['fechaInicioAProcesar'] ?? '1970-01-01');
       });
       return $resultados;
     } catch (\Exception $ex) {
