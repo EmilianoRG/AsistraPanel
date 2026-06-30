@@ -6,61 +6,6 @@ use Yii;
 class Util {
   public static function getProyectos(): array {
     return Yii::$app->params['proyectos'] ?? [];
-
-    /*
-    return [
-      [
-        'nombre' => '2sis Evoluciona',
-        'schema' => 'proyectos2sis_2sis',
-        'url' => '2sis',
-      ],
-      [
-        'nombre' => 'IT Altamira',
-        'schema' => 'proyectos2sis_tec_altamira',
-        'url' => 'altamira',
-      ],
-      [
-        'nombre' => 'IT Campeche',
-        'schema' => 'proyectos2sis_tec_campeche',
-        'url' => 'campeche',
-      ],
-      [
-        'nombre' => 'IT Ciudad Victoria',
-        'schema' => 'proyectos2sis_tec_cdvictoria',
-        'url' => 'cdvictoria',
-      ],
-      [
-        'nombre' => 'IT Chiná',
-        'schema' => 'proyectos2sis_tec_china',
-        'url' => 'china',
-      ],
-      [
-        'nombre' => 'IT Comitancillo',
-        'schema' => 'proyectos2sis_tec_comitancillo',
-        'url' => 'comitancillo',
-      ],
-      [
-        'nombre' => 'Entorno de Pruebas (Sandbox)',
-        'schema' => 'proyectos2sis_tec_sandbox',
-        'url' => 'sandbox',
-      ],
-      [
-        'nombre' => 'IT San Marcos',
-        'schema' => 'proyectos2sis_tec_sanmarcos',
-        'url' => 'sanmarcos',
-      ],
-      [
-        'nombre' => 'IT Zacatepec',
-        'schema' => 'proyectos2sis_tec_zacatepec',
-        'url' => 'zacatepec',
-      ],
-//      [
-//        'nombre' => 'Soporte 2sis',
-//        'schema' => 'proyectos2sis_soporte',
-//        'url' => 'soporte',
-//      ],
-    ];
-    */
   }
 
   public static function getRecuperacionesBackup($fecha = null) {
@@ -216,6 +161,10 @@ class Util {
         }
         $resultados[] = $resultado;
       }
+      // ordenar el multiarray por fecha_inicio_a_procesar descendente
+      usort($resultados, function ($a, $b) {
+        return strtotime($b['fecha_inicio_a_procesar'] ?? '1970-01-01') <=> strtotime($a['fecha_inicio_a_procesar'] ?? '1970-01-01');
+      });
       return $resultados;
     } catch (\Exception $ex) {
       return ['errorMessage' => $ex->getMessage()];
