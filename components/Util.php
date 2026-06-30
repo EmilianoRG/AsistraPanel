@@ -161,9 +161,12 @@ class Util {
         }
         $resultados[] = $resultado;
       }
-      // ordenar el multiarray por fecha_inicio_a_procesar descendente
+      // ordenar el multiarray por fecha_inicio_a_procesar ascendente, si no existe
       usort($resultados, function ($a, $b) {
-        return strtotime($b['fechaInicioAProcesar'] ?? '1970-01-01') <=> strtotime($a['fechaInicioAProcesar'] ?? '1970-01-01');
+        $fechaA = $a['fechaInicioAProcesar'] ?? '0000-00-00';
+        $fechaB = $b['fechaInicioAProcesar'] ?? '0000-00-00';
+        return strtotime($fechaA) <=> strtotime($fechaB);
+        // return strtotime($b['fechaInicioAProcesar'] ?? '1970-01-01') <=> strtotime($a['fechaInicioAProcesar'] ?? '1970-01-01');
       });
       return $resultados;
     } catch (\Exception $ex) {
