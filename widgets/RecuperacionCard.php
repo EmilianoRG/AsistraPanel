@@ -9,7 +9,7 @@ class RecuperacionCard extends Widget {
   public $baseDatosNombre;
   public $fecha;
   public $totalEmpleados;
-  public $analizados;
+  public $totalARecuperar;
   public $recuperados;
   public $incompletos;
   public $inicioEjecucion;
@@ -102,7 +102,7 @@ class RecuperacionCard extends Widget {
           <div class="row g-2 mb-4">
             <div class="col-6">
               <div class="sync-metric">
-                <div class="sync-metric-val">{$this->recuperados}/{$this->analizados}</div>
+                <div class="sync-metric-val">{$this->recuperados}/{$this->totalARecuperar}</div>
                 <div class="sync-metric-lbl">Recuperados</div>
               </div>
             </div>

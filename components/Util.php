@@ -6,63 +6,63 @@ use Yii;
 class Util {
   public static function getProyectos(): array {
     return [
-      [
-        'nombre' => '2sis Evoluciona',
-        'schema' => 'proyectos2sis_2sis',
-        'url' => '2sis',
-      ],
-      [
-        'nombre' => 'IT Altamira',
-        'schema' => 'proyectos2sis_tec_altamira',
-        'url' => 'altamira',
-      ],
-      [
-        'nombre' => 'IT Campeche',
-        'schema' => 'proyectos2sis_tec_campeche',
-        'url' => 'campeche',
-      ],
-      [
-        'nombre' => 'IT Ciudad Victoria',
-        'schema' => 'proyectos2sis_tec_cdvictoria',
-        'url' => 'cdvictoria',
-      ],
-      [
-        'nombre' => 'IT Chiná',
-        'schema' => 'proyectos2sis_tec_china',
-        'url' => 'china',
-      ],
-      [
-        'nombre' => 'IT Comitancillo',
-        'schema' => 'proyectos2sis_tec_comitancillo',
-        'url' => 'comitancillo',
-      ],
-      [
-        'nombre' => 'Entorno de Pruebas (Sandbox)',
-        'schema' => 'proyectos2sis_tec_sandbox',
-        'url' => 'sandbox',
-      ],
-      [
-        'nombre' => 'IT San Marcos',
-        'schema' => 'proyectos2sis_tec_sanmarcos',
-        'url' => 'sanmarcos',
-      ],
-      [
-        'nombre' => 'IT Zacatepec',
-        'schema' => 'proyectos2sis_tec_zacatepec',
-        'url' => 'zacatepec',
-      ],
 //      [
-//        'nombre' => 'Soporte 2sis',
-//        'schema' => 'proyectos2sis_soporte',
-//        'url' => 'soporte',
+//        'nombre' => '2sis Evoluciona',
+//        'schema' => 'proyectos2sis_2sis',
+//        'url' => '2sis',
 //      ],
+//      [
+//        'nombre' => 'IT Altamira',
+//        'schema' => 'proyectos2sis_tec_altamira',
+//        'url' => 'altamira',
+//      ],
+//      [
+//        'nombre' => 'IT Campeche',
+//        'schema' => 'proyectos2sis_tec_campeche',
+//        'url' => 'campeche',
+//      ],
+//      [
+//        'nombre' => 'IT Ciudad Victoria',
+//        'schema' => 'proyectos2sis_tec_cdvictoria',
+//        'url' => 'cdvictoria',
+//      ],
+//      [
+//        'nombre' => 'IT Chiná',
+//        'schema' => 'proyectos2sis_tec_china',
+//        'url' => 'china',
+//      ],
+//      [
+//        'nombre' => 'IT Comitancillo',
+//        'schema' => 'proyectos2sis_tec_comitancillo',
+//        'url' => 'comitancillo',
+//      ],
+//      [
+//        'nombre' => 'Entorno de Pruebas (Sandbox)',
+//        'schema' => 'proyectos2sis_tec_sandbox',
+//        'url' => 'sandbox',
+//      ],
+//      [
+//        'nombre' => 'IT San Marcos',
+//        'schema' => 'proyectos2sis_tec_sanmarcos',
+//        'url' => 'sanmarcos',
+//      ],
+//      [
+//        'nombre' => 'IT Zacatepec',
+//        'schema' => 'proyectos2sis_tec_zacatepec',
+//        'url' => 'zacatepec',
+//      ],
+////      [
+////        'nombre' => 'Soporte 2sis',
+////        'schema' => 'proyectos2sis_soporte',
+////        'url' => 'soporte',
+////      ],
 
 
-//      [
-//        'nombre' => 'Asistra 2sis',
-//        'schema' => 'asistra_2sis',
-//        'url' => 'asistra',
-//      ],
+      [
+        'nombre' => 'Asistra Prueba',
+        'schema' => 'asistra_prueba',
+        'url' => 'asistra',
+      ],
     ];
   }
 
@@ -161,14 +161,19 @@ class Util {
       'fecha_inicio_a_procesar',
       'fecha_fin_a_procesar',
       'total_personal',
-      'observaciones',
+      'resumen',
       'numero_errores',
     ];
     $select = implode(', ', $select);
+    $proyectos = self::getProyectos();
+    // ordenar el multiarray por fecha_inicio_a_procesar descendente
+    usort($proyectos, function ($a, $b) {
+      return strtotime($b['fecha_inicio_a_procesar'] ?? '1970-01-01') <=> strtotime($a['fecha_inicio_a_procesar'] ?? '1970-01-01');
+    });
     try {
       $db = Yii::$app->db;
       $resultados = [];
-      foreach (self::getProyectos() as $proyecto) {
+      foreach ($proyectos as $proyecto) {
         $resultado = [
           'institucionNombre' => $proyecto['nombre'],
           'baseDatosNombre' => $proyecto['schema'],
@@ -201,12 +206,14 @@ class Util {
             ->queryOne();
         }
         if ($data) {
-          $analisis = json_decode($data['observaciones'], true);
+          $resumen = json_decode($data['resumen'], true);
+          $resumen = is_array($resumen) ? $resumen : [];
+
           $resultado['fecha'] = date('Y-m-d', strtotime($data['inicio_ejecucion']));
           $resultado['totalEmpleados'] = $data['total_personal'];
-          $resultado['analizados'] = $analisis['asistenciasTotalesAnalizadas'] ?? 0;
-          $resultado['recuperados'] = $analisis['asistenciasProcesadas'] ?? 0;
-          $resultado['incompletos'] = $analisis['asistenciasTotalesAnalizadas'] - $analisis['asistenciasProcesadas'] ?? 0;
+          $resultado['totalARecuperar'] = $resumen['total_personal'] ?? 0;
+          $resultado['recuperados'] = $resumen['recuperados'] ?? 0;
+          $resultado['incompletos'] = $resumen['incompletos'] ?? 0;
           $resultado['inicioEjecucion'] = $data['inicio_ejecucion'];
           $resultado['finEjecucion'] = $data['fin_ejecucion'];
           $resultado['tiempoTranscurrido'] = $data['tiempo_transcurrido'];

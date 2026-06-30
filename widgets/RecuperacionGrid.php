@@ -15,13 +15,13 @@ class RecuperacionGrid extends Widget {
     $cards = '';
     foreach ($this->data as $item) {
       $desfasado = strtotime($item['fecha']) < strtotime($this->fechaActual);
-      $desfaseDias = $desfasado ? (strtotime($this->fechaActual) - strtotime($item['fecha'])) / (60 * 60 * 24) : 0;
+      $desfaseDias = $desfasado ? (strtotime($this->fechaActual) - strtotime($item['fecha'])) / (60 * 60 * 24) : 0; // AÚN NO SE USA!
       $cards .= RecuperacionCard::widget([
         'institucionNombre' => $item['institucionNombre'],
         'baseDatosNombre' => $item['baseDatosNombre'],
         'fecha' => $item['fecha'],
         'totalEmpleados' => $item['totalEmpleados'],
-        'analizados' => $item['analizados'],
+        'totalARecuperar' => $item['totalARecuperar'],
         'recuperados' => $item['recuperados'],
         'incompletos' => $item['incompletos'],
         'inicioEjecucion' => $item['inicioEjecucion'],
