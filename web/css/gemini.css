@@ -210,6 +210,7 @@ body {
     padding: 10px;
     text-align: center;
     border: 1px solid #F1F5F9;
+    height: 100%;
 }
 
 .sync-metric-val {
