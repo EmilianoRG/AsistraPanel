@@ -145,17 +145,22 @@ class Util {
         if ($data) {
           $resumen = json_decode($data['resumen'], true);
           $resumen = is_array($resumen) ? $resumen : [];
+          $observaciones = json_decode($data['observaciones'], true);
+          $observaciones = is_array($observaciones) ? $observaciones : [];
 
           $resultado['fecha'] = date('Y-m-d', strtotime($data['inicio_ejecucion']));
           $resultado['totalEmpleados'] = $data['total_personal'];
           $resultado['totalARecuperar'] = $resumen['total_personal'] ?? 0;
           $resultado['recuperados'] = $resumen['recuperados'] ?? 0;
           $resultado['incompletos'] = $resumen['incompletos'] ?? 0;
+          $resultado['asistenciasProcesadas'] = $observaciones['asistenciasProcesadas'] ?? 0;
+          $resultado['asistenciasTotalesAnalizadas'] = $observaciones['asistenciasTotalesAnalizadas'] ?? 0;
           $resultado['inicioEjecucion'] = $data['inicio_ejecucion'];
           $resultado['finEjecucion'] = $data['fin_ejecucion'];
           $resultado['tiempoTranscurrido'] = $data['tiempo_transcurrido'];
           $resultado['fechaInicioAProcesar'] = $data['fecha_inicio_a_procesar'];
           $resultado['fechaFinAProcesar'] = $data['fecha_fin_a_procesar'];
+          $resultado['fechaHoraActualizacion'] = $resumen['fecha_hora_actualizacion'];
           $resultado['numeroErrores'] = $data['numero_errores'];
           $resultado['encontrado'] = true;
         }
@@ -163,10 +168,10 @@ class Util {
       }
       // ordenar el multiarray por fecha_inicio_a_procesar ascendente, si no existe
       usort($resultados, function ($a, $b) {
-        $fechaA = $a['fechaInicioAProcesar'] ?? '0000-00-00';
-        $fechaB = $b['fechaInicioAProcesar'] ?? '0000-00-00';
+        $fechaA = $a['inicioEjecucion'] ?? '0000-00-00';
+        $fechaB = $b['inicioEjecucion'] ?? '0000-00-00';
         return strtotime($fechaA) <=> strtotime($fechaB);
-        // return strtotime($b['fechaInicioAProcesar'] ?? '1970-01-01') <=> strtotime($a['fechaInicioAProcesar'] ?? '1970-01-01');
+        // return strtotime($b['inicioEjecucion'] ?? '1970-01-01') <=> strtotime($a['inicioEjecucion'] ?? '1970-01-01');
       });
       return $resultados;
     } catch (\Exception $ex) {

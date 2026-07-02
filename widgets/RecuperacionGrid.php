@@ -24,9 +24,12 @@ class RecuperacionGrid extends Widget {
         'totalARecuperar' => $item['totalARecuperar'],
         'recuperados' => $item['recuperados'],
         'incompletos' => $item['incompletos'],
+        'asistenciasProcesadas' => $item['asistenciasProcesadas'],
+        'asistenciasTotalesAnalizadas' => $item['asistenciasTotalesAnalizadas'],
         'inicioEjecucion' => $item['inicioEjecucion'],
         'finEjecucion' => $item['finEjecucion'],
         'tiempoTranscurrido' => $item['tiempoTranscurrido'],
+        'fechaHoraActualizacion' => $item['fechaHoraActualizacion'],
         'numeroErrores' => $item['numeroErrores'],
         'desfasado' => $desfasado
       ]);

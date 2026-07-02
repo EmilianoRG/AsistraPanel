@@ -12,9 +12,12 @@ class RecuperacionCard extends Widget {
   public $totalARecuperar;
   public $recuperados;
   public $incompletos;
+  public $asistenciasProcesadas;
+  public $asistenciasTotalesAnalizadas;
   public $inicioEjecucion;
   public $finEjecucion;
   public $tiempoTranscurrido;
+  public $fechaHoraActualizacion;
   public $numeroErrores;
   public $desfasado = false;
 
@@ -26,6 +29,11 @@ class RecuperacionCard extends Widget {
     $fechaUltimoEnvio = 'Hoy';
     $fechaEjecucion = /*Util::formatDate($this->inicioEjecucion) . ' ' . */ Util::formatTime($this->inicioEjecucion);
     $tiempoTranscurrido = Util::obtenerTiempoTranscurrido($this->inicioEjecucion, $this->finEjecucion);
+
+    $porcentajeAsistenciasProcesadas = $this->asistenciasTotalesAnalizadas > 0 ? round(($this->asistenciasProcesadas / $this->asistenciasTotalesAnalizadas) * 100, 2) : 0;
+    $fechaHoraActualizacion = Util::formatTime($this->fechaHoraActualizacion);
+    // ajustar la clase dependiendo del porcentaje de asistencias procesadas, < 33 = verde, 33-66 = amarillo, > 66 = rojo
+    $metricClass = $porcentajeAsistenciasProcesadas < 33 ? 'metric-state-green' : ($porcentajeAsistenciasProcesadas < 66 ? 'metric-state-yellow' : 'metric-state-danger');
 
     $class = '';
     $borderClass = '';
@@ -99,7 +107,7 @@ class RecuperacionCard extends Widget {
   
           <hr class="text-muted opacity-25">
 
-          <div class="row g-2 mb-4">
+          <div class="row g-2 mb-2">
             <div class="col-6">
               <div class="sync-metric">
                 <div class="sync-metric-val">{$this->recuperados}/{$this->totalARecuperar}</div>
@@ -110,6 +118,21 @@ class RecuperacionCard extends Widget {
               <div class="sync-metric">
                 <div class="sync-metric-val text-{$class} {$tecFechaClass}">{$fechaUltimoEnvio}</div>
                 <div class="sync-metric-lbl">Último Envío</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-2 mb-4">
+            <div class="col-6">
+              <div class="sync-metric {$metricClass}">
+                <div class="sync-metric-val">{$this->asistenciasProcesadas} ({$porcentajeAsistenciasProcesadas}%)</div>
+                <div class="sync-metric-lbl">Asistencias Procesadas</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="sync-metric">
+                <div class="sync-metric-val">{$fechaHoraActualizacion}</div>
+                <div class="sync-metric-lbl">Última Actualización</div>
               </div>
             </div>
           </div>

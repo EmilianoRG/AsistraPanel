@@ -224,3 +224,38 @@ body {
     color: #64748B;
     letter-spacing: 0.5px;
 }
+
+/* Estados dinámicos de semáforo para el bloque de porcentaje de asistencias */
+.metric-state-green {
+    background-color: #E6F4EA !important;
+    border-color: #A3E635 !important;
+}
+.metric-state-green .sync-metric-val {
+    color: #137333 !important;
+}
+
+.metric-state-yellow {
+    background-color: #FEF3C7 !important;
+    border-color: #FBBF24 !important;
+    animation: pulse-warning 2.2s infinite;
+}
+.metric-state-yellow .sync-metric-val {
+    color: #B45309 !important;
+}
+
+.metric-state-red {
+    background-color: #FEE2E2 !important;
+    border-color: #F87171 !important;
+    animation: pulse-red 1.8s infinite;
+}
+.metric-state-red .sync-metric-val {
+    color: #B91C1C !important;
+}
+
+.metric-state-offline {
+    background-color: #F1F5F9 !important;
+    border-color: #CBD5E1 !important;
+}
+.metric-state-offline .sync-metric-val {
+    color: #64748B !important;
+}
