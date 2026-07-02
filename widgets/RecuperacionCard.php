@@ -33,7 +33,7 @@ class RecuperacionCard extends Widget {
     $porcentajeAsistenciasProcesadas = $this->asistenciasTotalesAnalizadas > 0 ? round(($this->asistenciasProcesadas / $this->asistenciasTotalesAnalizadas) * 100, 2) : 0;
     $fechaHoraActualizacion = Util::formatTime($this->fechaHoraActualizacion);
     // ajustar la clase dependiendo del porcentaje de asistencias procesadas, < 33 = verde, 33-66 = amarillo, > 66 = rojo
-    $metricClass = $porcentajeAsistenciasProcesadas < 33 ? 'metric-state-green' : ($porcentajeAsistenciasProcesadas < 66 ? 'metric-state-yellow' : 'metric-state-danger');
+    $metricClass = $porcentajeAsistenciasProcesadas < 33 ? 'metric-state-green' : ($porcentajeAsistenciasProcesadas < 66 ? 'metric-state-yellow' : 'metric-state-red');
 
     $class = '';
     $borderClass = '';
