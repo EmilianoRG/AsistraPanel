@@ -160,7 +160,7 @@ class Util {
           $resultado['tiempoTranscurrido'] = $data['tiempo_transcurrido'];
           $resultado['fechaInicioAProcesar'] = $data['fecha_inicio_a_procesar'];
           $resultado['fechaFinAProcesar'] = $data['fecha_fin_a_procesar'];
-          $resultado['fechaHoraActualizacion'] = $resumen['fecha_hora_actualizacion'];
+          $resultado['fechaHoraActualizacion'] = $resumen['detalles_actualizacion']['fecha_hora_actualizacion'];
           $resultado['numeroErrores'] = $data['numero_errores'];
           $resultado['encontrado'] = true;
         }
