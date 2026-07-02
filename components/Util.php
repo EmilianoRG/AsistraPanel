@@ -103,8 +103,9 @@ class Util {
       'fecha_inicio_a_procesar',
       'fecha_fin_a_procesar',
       'total_personal',
-      'resumen',
+      'observaciones',
       'numero_errores',
+      'resumen',
     ];
     $select = implode(', ', $select);
     try {
@@ -160,7 +161,7 @@ class Util {
           $resultado['tiempoTranscurrido'] = $data['tiempo_transcurrido'];
           $resultado['fechaInicioAProcesar'] = $data['fecha_inicio_a_procesar'];
           $resultado['fechaFinAProcesar'] = $data['fecha_fin_a_procesar'];
-          $resultado['fechaHoraActualizacion'] = $resumen['detalles_actualizacion']['fecha_hora_actualizacion'];
+          $resultado['fechaHoraActualizacion'] = $resumen['detalles_actualizacion']['fecha_hora_actualizacion'] ?? null;
           $resultado['numeroErrores'] = $data['numero_errores'];
           $resultado['encontrado'] = true;
         }

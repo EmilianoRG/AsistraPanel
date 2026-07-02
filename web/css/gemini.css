@@ -211,6 +211,9 @@ body {
     text-align: center;
     border: 1px solid #F1F5F9;
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .sync-metric-val {
