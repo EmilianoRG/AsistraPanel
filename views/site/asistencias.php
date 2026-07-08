@@ -1,6 +1,7 @@
 <?php
 use app\components\Util;
 use app\widgets\AsistenciasGrid;
+use app\widgets\TituloReporte;
 use yii\web\View;
 
 /** @var View $this */
@@ -9,6 +10,11 @@ use yii\web\View;
 
 $this->title = 'Checadas de Hoy';
 $fechaActual = Util::formatDate($fechaHoy);
+
+echo TituloReporte::widget([
+  'titulo' => 'Checadas de Hoy',
+  'fecha' => $fechaHoy
+]);
 
 echo <<<HTML
 <!-- ENCABEZADO Y FILTROS -->
