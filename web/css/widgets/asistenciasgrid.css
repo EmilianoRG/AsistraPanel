@@ -1,0 +1,217 @@
+/* Tipografías y Textos */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: var(--asistra-primary);
+}
+
+/* Tarjetas Personalizadas */
+.asistra-card {
+    border: 1px solid var(--asistra-card-border);
+    border-radius: 16px;
+    background-color: #FFFFFF;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.asistra-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 20px -3px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03);
+    border-color: rgba(37, 99, 235, 0.2);
+}
+
+/* Estilo Crítico - Sin asistencia registrada */
+.asistra-card-critical {
+    border: 2px solid rgba(239, 68, 68, 0.4);
+    animation: pulse-border 2s infinite;
+}
+
+.asistra-card-critical::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: var(--asistra-danger);
+}
+
+/* Alerta animada de X */
+.critical-alert-banner {
+    background-color: rgba(239, 68, 68, 0.06);
+    border: 1px dashed rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    color: var(--asistra-danger);
+    font-weight: 600;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.critical-badge {
+    background-color: var(--asistra-danger);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 50rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    animation: pulse-bg 1.5s infinite;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.critical-icon-anim {
+    animation: shake 1.2s infinite;
+    font-size: 1.25rem;
+    color: var(--asistra-danger);
+    display: inline-block;
+}
+
+/* Barra de progreso de asistencia */
+.asistra-progress-wrapper {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 50rem;
+    background-color: #E2E8F0;
+    overflow: visible;
+}
+
+.progress-bar-animated-custom {
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Detalle del último check-in */
+.checkin-detail-box {
+    background-color: var(--asistra-gray-bg);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid var(--asistra-card-border);
+    font-size: 0.85rem;
+}
+
+.checkin-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: rgba(37, 99, 235, 0.1);
+    color: var(--asistra-secondary);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* Dictámenes */
+.dictamen-tag {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 50rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.dictamen-atiempo {
+    background-color: rgba(16, 185, 129, 0.12);
+    color: var(--asistra-success);
+}
+
+.dictamen-retardo {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: var(--asistra-warning);
+}
+
+.dictamen-falta {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: var(--asistra-danger);
+}
+
+/* Filtros interactivos */
+.filter-btn {
+    border-radius: 50rem;
+    padding: 6px 18px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.filter-btn-all {
+    background-color: var(--asistra-primary);
+    color: white;
+}
+.filter-btn-all:hover {
+    opacity: 0.9;
+    color: white;
+}
+
+/* Animaciones */
+@keyframes pulse-border {
+    0% { border-color: rgba(239, 68, 68, 0.4); }
+    50% { border-color: rgba(239, 68, 68, 0.9); }
+    100% { border-color: rgba(239, 68, 68, 0.4); }
+}
+
+@keyframes pulse-bg {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    20%, 60% { transform: rotate(-15deg); }
+    40%, 80% { transform: rotate(15deg); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* Toast de notificaciones */
+.custom-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--asistra-primary);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 1060;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.custom-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}

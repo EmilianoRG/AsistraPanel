@@ -12,6 +12,11 @@ class AppAsset extends AssetBundle {
   public $css = [
     // Font Awesome 6
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+    // Bootstrap Icons
+    [
+      'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css',
+      'rel' => 'stylesheet'
+    ],
     // Google Fonts (Es importante pasar las opciones correctas para fuentes externas)
     [
       'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap',

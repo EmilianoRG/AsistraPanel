@@ -1,14 +1,16 @@
 <?php
 namespace app\widgets;
 
+use app\assets\widgets\RecuperacionesGridAsset;
 use yii\base\Widget;
 
-class RecuperacionGrid extends Widget {
-  public $data;
+class RecuperacionesGrid extends Widget {
   public $fechaActual;
+  public $data;
 
   public function init() {
     parent::init();
+    RecuperacionesGridAsset::register($this->view);
   }
 
   public function run(): string {

@@ -31,7 +31,7 @@ $this->params['meta_description'] = 'Dashboard para acceder a los reportes y mó
                     <div class="display-6 mb-2">🕓</div>
                     <h5 class="card-title">Checadas de hoy</h5>
                     <p class="card-text small text-muted">Revisa las checadas del día actual por proyecto.</p>
-                    <?= Html::a('Ir al módulo', ['API/checkins-today'], ['class' => 'btn btn-primary btn-sm']) ?>
+                    <?= Html::a('Ir al módulo', ['site/asistencias'], ['class' => 'btn btn-primary btn-sm']) ?>
                 </div>
             </div>
         </div>

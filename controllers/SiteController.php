@@ -33,7 +33,7 @@ class SiteController extends Controller {
           ],
           [
             'allow' => true,
-            'actions' => ['index', 'logout', 'verificar-recuperacion'],
+            'actions' => ['index', 'logout', 'verificar-recuperacion', 'asistencias'],
             'roles' => ['@'],
           ]
         ],
@@ -89,6 +89,16 @@ class SiteController extends Controller {
     return $this->render('verificarRecuperacion', [
       'fechaHoy' => $fecha,
       'data' => Util::getRecuperaciones($fecha)
+    ]);
+  }
+
+  public function actionAsistencias($fecha = null): string {
+    if (!$fecha) {
+      $fecha = date('Y-m-d');
+    }
+    return $this->render('asistencias', [
+      'fechaHoy' => $fecha,
+      'data' => Util::getAsistencias($fecha)
     ]);
   }
 }

@@ -180,6 +180,120 @@ class Util {
     }
   }
 
+  public static function getAsistencias($fecha = null): array {
+    if (!$fecha) {
+      $fecha = date('Y-m-d');
+    }
+    // validar que la fecha tenga el formato correcto
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+      return ['errorMessage' => 'Fecha no válida. El formato debe ser YYYY-MM-DD.'];
+    }
+    $select = [
+      'p.numero_empleado',
+      'p.nombre',
+      'p.apellido_paterno',
+      'p.apellido_materno',
+      'a.id',
+      'a.hora_inicio',
+      'a.hora_fin',
+      'a.hora_inicio_registrada',
+      'a.hora_fin_registrada',
+      'a.fecha',
+      'a.status_proceso',
+      'a.status',
+    ];
+    $select = implode(', ', $select);
+    try {
+      $db = Yii::$app->db;
+      $resultados = [];
+      foreach (self::getProyectos() as $proyecto) {
+        $ultimaFecha = $fecha;
+        $esDeHoy = true;
+        $totalAsistencias = $totalAsistenciasHoy = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+          ])
+          ->queryScalar();
+        if ($totalAsistenciasHoy <= 0) {
+          $esDeHoy = false;
+          $ultimaFecha = $db->createCommand("SELECT fecha FROM {$proyecto['schema']}.asistencias WHERE fecha < :fecha AND status = :status ORDER BY id DESC LIMIT 1")
+            ->bindValues([
+              ':fecha' => $fecha,
+              ':status' => 1,
+            ])
+            ->queryScalar();
+          $totalAsistencias = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status")
+            ->bindValues([
+              ':fecha' => $ultimaFecha,
+              ':status' => 1,
+            ])
+            ->queryScalar();
+        }
+        $personalTotal = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.personal WHERE status = :status")
+          ->bindValues([
+            ':status' => 1,
+          ])
+          ->queryScalar();
+        $checadas = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status AND (status_proceso = :statusProceso OR status_proceso = :statusCompletado)")
+          ->bindValues([
+            ':fecha' => $ultimaFecha,
+            ':status' => 1,
+            ':statusProceso' => 1,
+            ':statusCompletado' => 2,
+          ])
+          ->queryScalar();
+
+        $alertaSinChecadas = false;
+        if (!$esDeHoy) {
+          // falta alerta para cuando no hay checadas de la última fecha que no es hoy!
+          $alertaSinChecadas = $checadas <= 0;
+        }
+
+        $resultado = [
+          'institucionNombre' => $proyecto['nombre'],
+          'baseDatosNombre' => $proyecto['schema'],
+          'esDeHoy' => $esDeHoy,
+          'personalTotal' => $personalTotal,
+          'checadas' => $checadas,
+          'totalAsistencias' => $totalAsistencias,
+          'alertaSinChecadas' => $alertaSinChecadas
+        ];
+        $ultimaChecada = $db->createCommand("SELECT {$select} FROM {$proyecto['schema']}.asistencias as a LEFT JOIN {$proyecto['schema']}.personal as p ON a.personal_id = p.id WHERE a.fecha = :fecha AND a.status = :status AND (a.status_proceso = :statusProceso OR a.status_proceso = :statusCompletado) ORDER BY a.id DESC LIMIT 1")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+            ':statusProceso' => 1,
+            ':statusCompletado' => 2,
+          ])
+          ->queryOne();
+        if (!$ultimaChecada) {
+          $ultimaChecada = $db->createCommand("SELECT {$select} FROM {$proyecto['schema']}.asistencias as a LEFT JOIN {$proyecto['schema']}.personal as p ON a.personal_id = p.id WHERE a.fecha < :fecha AND a.status = :status AND (a.status_proceso = :statusProceso OR a.status_proceso = :statusCompletado) ORDER BY a.id DESC LIMIT 1")
+            ->bindValues([
+              ':fecha' => $fecha,
+              ':status' => 1,
+              ':statusProceso' => 1,
+              ':statusCompletado' => 2,
+            ])
+            ->queryOne();
+        }
+        if ($ultimaChecada) {
+          $resultado = array_merge($resultado, $ultimaChecada);
+          $resultado['fechaUltimaChecada'] = $ultimaChecada['fecha'];
+        }
+        $resultados[] = $resultado;
+      }
+      usort($resultados, function ($a, $b) {
+        $nombreA = $a['institucionNombre'];
+        $nombreB = $b['institucionNombre'];
+        return strtotime($nombreA) <=> strtotime($nombreB);
+      });
+      return $resultados;
+    } catch (\Exception $ex) {
+      return ['errorMessage' => $ex->getMessage()];
+    }
+  }
+
   public static array $months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ];
