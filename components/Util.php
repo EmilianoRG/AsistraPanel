@@ -268,12 +268,12 @@ class Util {
         ];
 
         $ultimadaChecadaQuery = "
-        SELECT {$select} FROM {$proyecto['schema']}.asistencias as a 
-        LEFT JOIN {$proyecto['schema']}.personal as p ON a.personal_id = p.id 
+        SELECT {$select} FROM {$proyecto['schema']}.asistencias AS a 
+        LEFT JOIN {$proyecto['schema']}.personal AS p ON a.personal_id = p.id 
         WHERE a.fecha § :fecha AND a.status = :status AND (a.status_proceso = :statusProceso OR a.status_proceso = :statusCompletado)
         ORDER BY
-            CASE WHEN status_proceso = 1 THEN hora_inicio_registrada END DESC,
-            CASE WHEN status_proceso = 2 THEN hora_fin_registrada END DESC
+            CASE WHEN a.status_proceso = 1 THEN a.hora_inicio_registrada END DESC,
+            CASE WHEN a.status_proceso = 2 THEN a.hora_fin_registrada END DESC
         LIMIT 1
         ";
         $params = [
