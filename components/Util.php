@@ -276,24 +276,15 @@ class Util {
             CASE WHEN status_proceso = 2 THEN hora_fin_registrada END DESC
         LIMIT 1
         ";
-
-        $ultimaChecada = $db->createCommand(str_replace('§', '=', $ultimadaChecadaQuery))
-          ->bindValues([
-            ':fecha' => $fecha,
-            ':status' => 1,
-            ':statusProceso' => 1,
-            ':statusCompletado' => 2,
-          ])
-          ->queryOne();
+        $params = [
+          ':fecha' => $fecha,
+          ':status' => 1,
+          ':statusProceso' => 1,
+          ':statusCompletado' => 2,
+        ];
+        $ultimaChecada = $db->createCommand(str_replace('§', '=', $ultimadaChecadaQuery))->bindValues($params)->queryOne();
         if (!$ultimaChecada) {
-          $ultimaChecada = $db->createCommand(str_replace('§', '<', $ultimadaChecadaQuery))
-            ->bindValues([
-              ':fecha' => $fecha,
-              ':status' => 1,
-              ':statusProceso' => 1,
-              ':statusCompletado' => 2,
-            ])
-            ->queryOne();
+          $ultimaChecada = $db->createCommand(str_replace('§', '<', $ultimadaChecadaQuery))->bindValues($params)->queryOne();
         }
         if ($ultimaChecada) {
           $resultado = array_merge($resultado, $ultimaChecada);

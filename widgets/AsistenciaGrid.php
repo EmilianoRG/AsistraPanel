@@ -97,9 +97,10 @@ class AsistenciaGrid extends Widget {
       <div class="asistra-card {$asistraCardClass} p-4 d-flex flex-column justify-content-between">
         <!-- Cabecera de la tarjeta -->
         <div>
-          <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+          <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
             <div>
               <h5 class="card-title mt-1 mb-0 fs-5 lh-sm text-dark-emphasis">{$this->data['institucionNombre']}</h5>
+              <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">{$this->data['personalTotal']} Empleados</span>
             </div>
             {$badgeDiv}
           </div>
