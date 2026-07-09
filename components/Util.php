@@ -209,7 +209,7 @@ class Util {
       foreach (self::getProyectos() as $proyecto) {
         $ultimaFecha = $fecha;
         $esDeHoy = true;
-        $totalAsistencias = $totalAsistenciasHoy = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status")
+        $asistenciasTotales = $totalAsistenciasHoy = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status")
           ->bindValues([
             ':fecha' => $fecha,
             ':status' => 1,
@@ -223,7 +223,7 @@ class Util {
               ':status' => 1,
             ])
             ->queryScalar();
-          $totalAsistencias = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status")
+          $asistenciasTotales = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status")
             ->bindValues([
               ':fecha' => $ultimaFecha,
               ':status' => 1,
@@ -235,11 +235,17 @@ class Util {
             ':status' => 1,
           ])
           ->queryScalar();
-        $checadas = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status AND (status_proceso = :statusProceso OR status_proceso = :statusCompletado)")
+        $asistenciasEnProceso = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status AND status_proceso = :statusProceso")
           ->bindValues([
             ':fecha' => $ultimaFecha,
             ':status' => 1,
             ':statusProceso' => 1,
+          ])
+          ->queryScalar();
+        $asistenciasCompletadas = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.asistencias WHERE fecha = :fecha AND status = :status AND status_proceso = :statusCompletado")
+          ->bindValues([
+            ':fecha' => $ultimaFecha,
+            ':status' => 1,
             ':statusCompletado' => 2,
           ])
           ->queryScalar();
@@ -247,7 +253,7 @@ class Util {
         $alertaSinChecadas = false;
         if (!$esDeHoy) {
           // falta alerta para cuando no hay checadas de la última fecha que no es hoy!
-          $alertaSinChecadas = $checadas <= 0;
+          $alertaSinChecadas = $asistenciasEnProceso <= 0 && $asistenciasCompletadas <= 0;
         }
 
         $resultado = [
@@ -255,11 +261,23 @@ class Util {
           'baseDatosNombre' => $proyecto['schema'],
           'esDeHoy' => $esDeHoy,
           'personalTotal' => $personalTotal,
-          'checadas' => $checadas,
-          'totalAsistencias' => $totalAsistencias,
+          'asistenciasEnProceso' => $asistenciasEnProceso,
+          'asistenciasCompletadas' => $asistenciasCompletadas,
+          'asistenciasTotales' => $asistenciasTotales,
           'alertaSinChecadas' => $alertaSinChecadas
         ];
-        $ultimaChecada = $db->createCommand("SELECT {$select} FROM {$proyecto['schema']}.asistencias as a LEFT JOIN {$proyecto['schema']}.personal as p ON a.personal_id = p.id WHERE a.fecha = :fecha AND a.status = :status AND (a.status_proceso = :statusProceso OR a.status_proceso = :statusCompletado) ORDER BY a.id DESC LIMIT 1")
+
+        $ultimadaChecadaQuery = "
+        SELECT {$select} FROM {$proyecto['schema']}.asistencias as a 
+        LEFT JOIN {$proyecto['schema']}.personal as p ON a.personal_id = p.id 
+        WHERE a.fecha § :fecha AND a.status = :status AND (a.status_proceso = :statusProceso OR a.status_proceso = :statusCompletado)
+        ORDER BY
+            CASE WHEN status_proceso = 1 THEN hora_inicio_registrada END DESC,
+            CASE WHEN status_proceso = 2 THEN hora_fin_registrada END DESC
+        LIMIT 1
+        ";
+
+        $ultimaChecada = $db->createCommand(str_replace('§', '=', $ultimadaChecadaQuery))
           ->bindValues([
             ':fecha' => $fecha,
             ':status' => 1,
@@ -268,7 +286,7 @@ class Util {
           ])
           ->queryOne();
         if (!$ultimaChecada) {
-          $ultimaChecada = $db->createCommand("SELECT {$select} FROM {$proyecto['schema']}.asistencias as a LEFT JOIN {$proyecto['schema']}.personal as p ON a.personal_id = p.id WHERE a.fecha < :fecha AND a.status = :status AND (a.status_proceso = :statusProceso OR a.status_proceso = :statusCompletado) ORDER BY a.id DESC LIMIT 1")
+          $ultimaChecada = $db->createCommand(str_replace('§', '<', $ultimadaChecadaQuery))
             ->bindValues([
               ':fecha' => $fecha,
               ':status' => 1,

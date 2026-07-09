@@ -23,7 +23,7 @@ class AsistenciaGrid extends Widget {
 
     $fechaUltimasAsistencias = Util::formatDate($this->data['fecha']);
 
-    $porcentajeAsistencias = $this->data['totalAsistencias'] > 0 ? round(($this->data['checadas'] / $this->data['totalAsistencias']) * 100, 2) : 0;
+    $porcentajeAsistencias = $this->data['asistenciasTotales'] > 0 ? round(($this->data['asistenciasCompletadas'] / $this->data['asistenciasTotales']) * 100, 2) : 0;
     $porcentajeClass = 'primary';
     if ($porcentajeAsistencias <= 0) {
       $porcentajeClass = 'danger';
@@ -49,7 +49,7 @@ class AsistenciaGrid extends Widget {
         break;
     }
 
-    $checadasClass = $this->data['checadas'] <= 0 ? 'text-danger' : 'text-success';
+    $checadasClass = $this->data['asistenciasCompletadas'] <= 0 ? 'text-danger' : 'text-success';
 
     $noEsDeHoyDiv = '';
     if (!$this->data['esDeHoy']) {
@@ -107,24 +107,24 @@ class AsistenciaGrid extends Widget {
           <!-- Detalles numéricos del Tecnológico -->
           <div class="row g-2 py-2 text-center bg-light rounded-3 my-2 border border-light">
             <div class="col-4">
-              <span class="text-muted d-block text-uppercase text-xs font-bold" style="font-size: 0.65rem;">Empleados</span>
-              <strong class="text-dark fs-6">{$this->data['personalTotal']}</strong>
+              <span class="text-muted d-block text-uppercase text-xs font-bold" style="font-size: 0.65rem;">En Proceso</span>
+              <strong class="text-dark fs-6">{$this->data['asistenciasEnProceso']}</strong>
             </div>
             <div class="col-4 border-start border-end">
-              <span class="text-muted d-block text-uppercase text-xs font-bold" style="font-size: 0.65rem;">Checadas</span>
-              <strong class={$checadasClass} fs-6">{$this->data['checadas']}</strong>
+              <span class="text-muted d-block text-uppercase text-xs font-bold" style="font-size: 0.65rem;">Completadas</span>
+              <strong class={$checadasClass} fs-6">{$this->data['asistenciasCompletadas']}</strong>
             </div>
             <div class="col-4">
-              <span class="text-muted d-block text-uppercase text-xs font-bold" style="font-size: 0.65rem;">Esperados</span>
-              <strong class="text-dark fs-6">{$this->data['totalAsistencias']}</strong>
+              <span class="text-muted d-block text-uppercase text-xs font-bold" style="font-size: 0.65rem;">Totales</span>
+              <strong class="text-dark fs-6">{$this->data['asistenciasTotales']}</strong>
             </div>
           </div>
 
           <!-- Progreso Visual -->
           <div class="asistra-progress-wrapper">
             <div class="d-flex justify-content-between align-items-center mb-1 text-xs">
-              <span class="text-muted font-semibold">Registro Diario</span>
-              <span class="text-{$porcentajeClass} fw-bold">{$this->data['checadas']} de {$this->data['totalAsistencias']} ({$porcentajeAsistencias}%)</span>
+              <span class="text-muted font-semibold">Checadas Completadas</span>
+              <span class="text-{$porcentajeClass} fw-bold">{$this->data['asistenciasCompletadas']} de {$this->data['asistenciasTotales']} ({$porcentajeAsistencias}%)</span>
             </div>
             <div class="progress">
               <div class="progress-bar progress-bar-animated-custom rounded-pill bg-{$porcentajeClass}" role="progressbar" style="width: {$porcentajeAsistencias}%" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100"></div>
