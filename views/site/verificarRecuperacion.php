@@ -1,6 +1,7 @@
 <?php
 use app\components\Util;
 use app\widgets\RecuperacionesGrid;
+use app\widgets\TituloReporte;
 use yii\web\View;
 
 /** @var View $this */
@@ -8,8 +9,13 @@ use yii\web\View;
 /** @var array $data */
 
 $this->title = 'Monitoreo de Recuperación';
-$fechaActual = Util::formatDate($fechaHoy);
 
+echo TituloReporte::widget([
+  'titulo' => $this->title,
+  'fecha' => $fechaHoy
+]);
+
+/*$fechaActual = Util::formatDate($fechaHoy);
 echo <<<HTML
 <!-- ENCABEZADO Y FILTROS -->
 <div class="row align-items-center mb-4">
@@ -18,7 +24,7 @@ echo <<<HTML
     <p class="text-muted">Estado de recuperación en todos los proyectos de Asistra. Fecha Actual: <strong>{$fechaActual}</strong></p>
   </div>
 </div>
-HTML;
+HTML;*/
 
 echo RecuperacionesGrid::widget([
   'fechaActual' => $fechaHoy,

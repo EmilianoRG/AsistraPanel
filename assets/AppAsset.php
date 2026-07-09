@@ -26,7 +26,7 @@ class AppAsset extends AssetBundle {
     'css/gemini.css',
   ];
   public $js = [
-    'js/color-mode.js',
+//    'js/color-mode.js',
   ];
   public $jsOptions = [
     'position' => View::POS_HEAD,
