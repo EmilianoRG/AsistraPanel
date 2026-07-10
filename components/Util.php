@@ -230,12 +230,6 @@ class Util {
             ])
             ->queryScalar();
         }
-        $ultimaFecha = $db->createCommand("SELECT fecha FROM {$proyecto['schema']}.asistencias WHERE fecha < :fecha AND status = :status ORDER BY fecha DESC LIMIT 1")
-          ->bindValues([
-            ':fecha' => $fecha,
-            ':status' => 1,
-          ])
-          ->queryScalar();
         $personalTotal = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.personal WHERE status = :status")
           ->bindValues([
             ':status' => 1,
