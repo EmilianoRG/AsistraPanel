@@ -217,7 +217,7 @@ class Util {
           ->queryScalar();
         if ($totalAsistenciasHoy <= 0) {
           $esDeHoy = false;
-          $ultimaFecha = $db->createCommand("SELECT fecha FROM {$proyecto['schema']}.asistencias WHERE fecha < :fecha AND status = :status ORDER BY id DESC LIMIT 1")
+          $ultimaFecha = $db->createCommand("SELECT fecha FROM {$proyecto['schema']}.asistencias WHERE fecha < :fecha AND status = :status ORDER BY fecha DESC LIMIT 1")
             ->bindValues([
               ':fecha' => $fecha,
               ':status' => 1,
