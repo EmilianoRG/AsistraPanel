@@ -86,7 +86,7 @@ class RecuperacionCard extends Widget {
       </div>
       HTML;
     }
-    if ($this->sinConexion) {
+    if ($this->sinConexion === '1') {
       $sinConexionDiv = <<<HTML
       <div class="d-flex align-items-center gap-3">
         <div class="status-indicator-2 blink-danger">
@@ -115,7 +115,7 @@ class RecuperacionCard extends Widget {
               <span class="{$tecEmpleadosClass}">{$this->totalEmpleados} Empleados</span>
             </div>
           </div>
-  
+          
           <hr class="text-muted opacity-25">
 
           <div class="row g-2 mb-2">
