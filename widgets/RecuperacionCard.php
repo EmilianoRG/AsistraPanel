@@ -86,7 +86,7 @@ class RecuperacionCard extends Widget {
       </div>
       HTML;
     }
-    if ($this->sinConexion === '1') {
+    if ($this->sinConexion === 1) {
       $sinConexionDiv = <<<HTML
       <div class="d-flex align-items-center gap-3">
         <div class="status-indicator-2 blink-danger">
