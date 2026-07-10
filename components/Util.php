@@ -164,7 +164,7 @@ class Util {
           $resultado['fechaHoraActualizacion'] = $resumen['detalles_actualizacion']['fecha_hora_actualizacion'] ?? null;
           $resultado['numeroErrores'] = $data['numero_errores'];
           $resultado['encontrado'] = true;
-          $resultado['sinConexion'] = $resumen['sin_conexion'] ?? false;
+          $resultado['sinConexion'] = $observaciones['detalles_actualizacion']['sin_conexion'] ?? false;
         }
         $resultados[] = $resultado;
       }
