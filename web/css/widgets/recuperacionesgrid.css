@@ -101,6 +101,16 @@
     border-radius: 20px;
 }
 
+.status-indicator-2 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
 .status-active {
     background-color: #E6F4EA;
     color: #137333;

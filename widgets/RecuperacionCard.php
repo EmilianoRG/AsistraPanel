@@ -19,6 +19,7 @@ class RecuperacionCard extends Widget {
   public $tiempoTranscurrido;
   public $fechaHoraActualizacion;
   public $numeroErrores;
+  public $sinConexion;
   public $desfasado = false;
 
   public function init() {
@@ -47,6 +48,7 @@ class RecuperacionCard extends Widget {
     $tecFechaClass = '';
     $alerta = '';
     $erroresDiv = '';
+    $sinConexionDiv = '';
 
     if ($this->desfasado) {
       $fechaUltimoEnvio = Util::formatDate($this->fecha);
@@ -81,6 +83,15 @@ class RecuperacionCard extends Widget {
       <div class="d-flex justify-content-between mb-1 bg-danger bg-opacity-10 p-2 rounded">
         <span class="text-danger fw-semibold"><i class="fa-solid fa-triangle-exclamation me-1"></i>Número de Errores:</span>
         <span class="fw-bold text-danger">{$this->numeroErrores}</span>
+      </div>
+      HTML;
+    }
+    if ($this->sinConexion) {
+      $sinConexionDiv = <<<HTML
+      <div class="d-flex align-items-center gap-3">
+        <div class="status-indicator-2 blink-danger">
+          <i class="fa-solid fa-wifi text-white"></i> ¡SIN CONEXIÓN!
+        </div>
       </div>
       HTML;
     }
@@ -149,6 +160,8 @@ class RecuperacionCard extends Widget {
             </div>
             {$erroresDiv}
           </div>
+          
+          {$sinConexionDiv}
         </div>
       </div>
     </div>

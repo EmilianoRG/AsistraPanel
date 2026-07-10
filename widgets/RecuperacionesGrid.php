@@ -33,6 +33,7 @@ class RecuperacionesGrid extends Widget {
         'tiempoTranscurrido' => $item['tiempoTranscurrido'],
         'fechaHoraActualizacion' => $item['fechaHoraActualizacion'],
         'numeroErrores' => $item['numeroErrores'],
+        'sinConexion' => $item['sinConexion'],
         'desfasado' => $desfasado
       ]);
     }
