@@ -230,6 +230,12 @@ class Util {
             ])
             ->queryScalar();
         }
+        $ultimaFecha = $db->createCommand("SELECT fecha FROM {$proyecto['schema']}.asistencias WHERE fecha < :fecha AND status = :status ORDER BY fecha DESC LIMIT 1")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+          ])
+          ->queryScalar();
         $personalTotal = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.personal WHERE status = :status")
           ->bindValues([
             ':status' => 1,
@@ -249,13 +255,11 @@ class Util {
             ':statusCompletado' => 2,
           ])
           ->queryScalar();
-
         $alertaSinChecadas = false;
         if (!$esDeHoy) {
           // falta alerta para cuando no hay checadas de la última fecha que no es hoy!
           $alertaSinChecadas = $asistenciasEnProceso <= 0 && $asistenciasCompletadas <= 0;
         }
-
         $resultado = [
           'institucionNombre' => $proyecto['nombre'],
           'baseDatosNombre' => $proyecto['schema'],
@@ -277,7 +281,7 @@ class Util {
         LIMIT 1
         ";
         $params = [
-          ':fecha' => $fecha,
+          ':fecha' => $ultimaFecha,
           ':status' => 1,
           ':statusProceso' => 1,
           ':statusCompletado' => 2,
