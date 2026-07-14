@@ -1,0 +1,198 @@
+:root {
+    --asistra-card-border: #E2E8F0; /* Slate 200 */
+    --asistra-text-muted: #64748B; /* Slate 500 */
+    --asistra-empty-gray: #94A3B8; /* Slate 400 */
+    --transition-speed: 0.3s;
+}
+
+/* Cards & Hover Effects */
+.tec-card {
+    background-color: #ffffff;
+    border: 1px solid var(--asistra-card-border);
+    border-radius: 16px;
+    transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.tec-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px -10px rgba(15, 23, 42, 0.15);
+    border-color: rgba(37, 99, 235, 0.3);
+}
+
+/* Border condicional en la parte superior únicamente para Historico y Sin Registros */
+.tec-card.status-historic {
+    border-top: 5px solid var(--asistra-warning);
+}
+
+.tec-card.status-empty {
+    border-top: 5px solid var(--asistra-empty-gray);
+}
+
+/* Badges status types */
+.badge-asistra-primary {
+    background-color: var(--asistra-primary);
+    color: #ffffff;
+}
+
+.badge-asistra-warning {
+    background-color: var(--asistra-warning);
+    color: #ffffff;
+}
+
+.badge-asistra-empty {
+    background-color: var(--asistra-empty-gray);
+    color: #ffffff;
+}
+
+/* Stat Badges */
+.stat-box {
+    background-color: var(--asistra-gray-bg);
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid var(--asistra-card-border);
+    transition: background-color var(--transition-speed);
+}
+
+.stat-box:hover {
+    background-color: #F1F5F9;
+}
+
+/* Notification Banners */
+.historical-alert {
+    background-color: rgba(245, 158, 11, 0.08);
+    border: 1px dashed rgba(245, 158, 11, 0.3);
+    border-radius: 10px;
+    color: #B45309;
+    font-size: 0.85rem;
+}
+
+.empty-alert {
+    background-color: #F8FAFC;
+    border: 1px dashed var(--asistra-card-border);
+    border-radius: 10px;
+    color: var(--asistra-text-muted);
+    font-size: 0.85rem;
+}
+
+/* Last Justification Sub-Card */
+.detail-card {
+    background-color: #F8FAFC;
+    border-radius: 12px;
+    border: 1px solid var(--asistra-card-border);
+}
+
+/* Transaction custom badges (White text forced) */
+.badge-type-justificacion {
+    background-color: var(--asistra-secondary) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-type-permiso {
+    background-color: #8B5CF6 !important; /* Púrpura elegante */
+    color: #ffffff !important;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.badge-type-vacacion {
+    background-color: var(--asistra-success) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Rediseño de Badges de Alcance (Individual / Global) */
+.badge-scope-individual {
+    background-color: rgba(37, 99, 235, 0.06);
+    color: var(--asistra-secondary);
+    border: 1px solid rgba(37, 99, 235, 0.18);
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.badge-scope-global {
+    background-color: rgba(139, 92, 246, 0.06);
+    color: #8B5CF6;
+    border: 1px solid rgba(139, 92, 246, 0.18);
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Contenedor de observaciones con padding amplio */
+.observation-box {
+    background-color: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--asistra-card-border);
+}
+
+/* Filter Pills */
+.filter-btn {
+    border: 1px solid var(--asistra-card-border);
+    background-color: #ffffff;
+    color: var(--asistra-primary);
+    border-radius: 20px;
+    font-weight: 500;
+    padding: 8px 18px;
+    transition: all var(--transition-speed);
+}
+
+.filter-btn.active, .filter-btn:hover {
+    background-color: var(--asistra-secondary);
+    color: #ffffff;
+    border-color: var(--asistra-secondary);
+}
+
+/* Search input styling */
+.search-container .fa-search {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--asistra-text-muted);
+}
+
+.search-input {
+    padding-left: 42px;
+    border-radius: 30px;
+    border: 1px solid var(--asistra-card-border);
+    height: 48px;
+}
+
+.search-input:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    border-color: var(--asistra-secondary);
+}

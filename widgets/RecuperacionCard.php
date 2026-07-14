@@ -90,7 +90,7 @@ class RecuperacionCard extends Widget {
       $sinConexionDiv = <<<HTML
       <div class="d-flex align-items-center gap-3">
         <div class="status-indicator-2 blink-danger">
-          <i class="fa-solid fa-wifi text-white"></i> ¡SIN CONEXIÓN!
+          <i class="fa-solid fa-wifi-slash text-white"></i> ¡SIN CONEXIÓN!
         </div>
       </div>
       HTML;

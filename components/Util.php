@@ -1,6 +1,7 @@
 <?php
 namespace app\components;
 
+use app\widgets\JustificacionCard;
 use Yii;
 
 class Util {
@@ -288,6 +289,121 @@ class Util {
         if ($ultimaChecada) {
           $resultado = array_merge($resultado, $ultimaChecada);
           $resultado['fechaUltimaChecada'] = $ultimaChecada['fecha'];
+        }
+        $resultados[] = $resultado;
+      }
+      usort($resultados, function ($a, $b) {
+        $nombreA = $a['institucionNombre'];
+        $nombreB = $b['institucionNombre'];
+        return strtotime($nombreA) <=> strtotime($nombreB);
+      });
+      return $resultados;
+    } catch (\Exception $ex) {
+      return ['errorMessage' => $ex->getMessage()];
+    }
+  }
+
+  public static function getJustificaciones($fecha = null): array {
+    if (!$fecha) {
+      $fecha = date('Y-m-d');
+    }
+    // validar que la fecha tenga el formato correcto
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+      return ['errorMessage' => 'Fecha no válida. El formato debe ser YYYY-MM-DD.'];
+    }
+    $select = [
+      'j.tipo',
+      'j.justifica',
+      'm.nombre AS motivo',
+      'j.vacacion_id',
+      'j.fecha_inicio',
+      'j.hora_inicio',
+      'j.fecha_fin',
+      'j.hora_fin',
+      'j.observaciones',
+//      'creado_por',
+      'j.fecha_creacion',
+      'j.hora_creacion',
+    ];
+    $select = implode(', ', $select);
+    try {
+      $db = Yii::$app->db;
+      $resultados = [];
+      foreach (self::getProyectos() as $proyecto) {
+        $ultimaFecha = $fecha;
+        $esDeHoy = true;
+        $justificacionesTotales = $totalJustificacionesHoy = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.justificaciones WHERE fecha_creacion = :fecha_creacion AND status = :status")
+          ->bindValues([
+            ':fecha_creacion' => $fecha,
+            ':status' => 1,
+          ])
+          ->queryScalar();
+        if ($totalJustificacionesHoy <= 0) {
+          $esDeHoy = false;
+          $ultimaFecha = $db->createCommand("SELECT fecha_creacion FROM {$proyecto['schema']}.justificaciones WHERE fecha_creacion < :fecha_creacion AND status = :status ORDER BY id DESC LIMIT 1")
+            ->bindValues([
+              ':fecha_creacion' => $fecha,
+              ':status' => 1,
+            ])
+            ->queryScalar();
+          $justificacionesTotales = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.justificaciones WHERE fecha_creacion = :fecha_creacion AND status = :status")
+            ->bindValues([
+              ':fecha_creacion' => $ultimaFecha,
+              ':status' => 1,
+            ])
+            ->queryScalar();
+        }
+        $personalTotal = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.personal WHERE status = :status")
+          ->bindValues([
+            ':status' => 1,
+          ])
+          ->queryScalar();
+        $totalJustificaciones = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.justificaciones WHERE fecha_creacion = :fechaCreacion AND status = :status AND justifica != :justifica")
+          ->bindValues([
+            ':fechaCreacion' => $ultimaFecha,
+            ':status' => 1,
+            ':justifica' => JustificacionCard::JUSTIFICA_PERMISO_POR_HORAS,
+          ])
+          ->queryScalar();
+        $totalPermisos = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.justificaciones WHERE fecha_creacion = :fechaCreacion AND status = :status AND justifica = :justifica")
+          ->bindValues([
+            ':fechaCreacion' => $ultimaFecha,
+            ':status' => 1,
+            ':justifica' => JustificacionCard::JUSTIFICA_PERMISO_POR_HORAS,
+          ])
+          ->queryScalar();
+        $sinJustificaciones = false;
+        if (!$esDeHoy) {
+          $sinJustificaciones = $justificacionesTotales <= 0;
+        }
+
+        $resultado = [
+          'institucionNombre' => $proyecto['nombre'],
+          'baseDatosNombre' => $proyecto['schema'],
+          'esDeHoy' => $esDeHoy,
+          'personalTotal' => $personalTotal,
+          'totalJustificaciones' => $totalJustificaciones,
+          'totalPermisos' => $totalPermisos,
+          'sinJustificaciones' => $sinJustificaciones,
+        ];
+        $ultimadaJustificacionQuery = "
+        SELECT {$select} FROM {$proyecto['schema']}.justificaciones as j
+        LEFT JOIN {$proyecto['schema']}.motivos AS m ON j.motivo_id = m.id
+        WHERE j.fecha_creacion § :fechaCreacion AND j.status = :status
+        ORDER BY j.id DESC
+        LIMIT 1
+        ";
+        $params = [
+          ':fechaCreacion' => $ultimaFecha,
+          ':status' => 1,
+        ];
+        $ultimaJustificacion = $db->createCommand(str_replace('§', '=', $ultimadaJustificacionQuery))->bindValues($params)->queryOne();
+        if (!$ultimaJustificacion) {
+          $ultimaJustificacion = $db->createCommand(str_replace('§', '<', $ultimadaJustificacionQuery))->bindValues($params)->queryOne();
+        }
+        if ($ultimaJustificacion) {
+          $resultado = array_merge($resultado, $ultimaJustificacion);
+          $resultado['fecha'] = $ultimaJustificacion['fecha_creacion'];
         }
         $resultados[] = $resultado;
       }

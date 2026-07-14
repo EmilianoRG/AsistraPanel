@@ -40,9 +40,9 @@ $this->params['meta_description'] = 'Dashboard para acceder a los reportes y mó
             <div class="card shadow-sm rounded-3 h-100">
                 <div class="card-body text-center">
                     <div class="display-6 mb-2">📋</div>
-                    <h5 class="card-title">Proyectos</h5>
-                    <p class="card-text small text-muted">Listado y administración de los tecnológicos / proyectos registrados.</p>
-                    <?= Html::a('Ver proyectos', ['API/projects'], ['class' => 'btn btn-primary btn-sm']) ?>
+                    <h5 class="card-title">Justificaciones</h5>
+                    <p class="card-text small text-muted">Gestiona y revisa las justificaciones de asistencia.</p>
+                    <?= Html::a('Ir al módulo', ['site/justificaciones'], ['class' => 'btn btn-primary btn-sm']) ?>
                 </div>
             </div>
         </div>
