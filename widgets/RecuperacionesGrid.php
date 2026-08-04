@@ -14,6 +14,7 @@ class RecuperacionesGrid extends Widget {
   }
 
   public function run(): string {
+    echo json_encode($this->data, JSON_PRETTY_PRINT); exit;
     $cards = '';
     foreach ($this->data as $item) {
       $desfasado = strtotime($item['fecha']) < strtotime($this->fechaActual);
