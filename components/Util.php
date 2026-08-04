@@ -176,7 +176,6 @@ class Util {
         return strtotime($fechaA) <=> strtotime($fechaB);
         // return strtotime($b['inicioEjecucion'] ?? '1970-01-01') <=> strtotime($a['inicioEjecucion'] ?? '1970-01-01');
       });
-      echo json_encode($resultados, JSON_PRETTY_PRINT); exit;
       return $resultados;
     } catch (\Exception $ex) {
       return ['errorMessage' => $ex->getMessage()];
