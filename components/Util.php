@@ -9,6 +9,81 @@ class Util {
     return Yii::$app->params['proyectos'] ?? [];
   }
 
+  public static function getProyectoById(string $tecnologicoId): ?array {
+    foreach (self::getProyectos() as $proyecto) {
+      if (($proyecto['id'] ?? null) === $tecnologicoId) {
+        return $proyecto;
+      }
+    }
+    return null;
+  }
+
+  public static function getResumenTecnologico(string $tecnologicoId, $fecha = null): array {
+    $proyecto = self::getProyectoById($tecnologicoId);
+    if (!$proyecto) {
+      return ['errorMessage' => 'No existe un tecnológico con el id proporcionado.'];
+    }
+
+    $schema = $proyecto['schema'];
+    $recuperaciones = self::getRecuperaciones($fecha);
+    if (isset($recuperaciones['errorMessage'])) {
+      return $recuperaciones;
+    }
+    $asistencias = self::getAsistencias($fecha);
+    if (isset($asistencias['errorMessage'])) {
+      return $asistencias;
+    }
+    $justificaciones = self::getJustificaciones($fecha);
+    if (isset($justificaciones['errorMessage'])) {
+      return $justificaciones;
+    }
+    $contadores = self::getContadoresDashboard($fecha);
+    if (isset($contadores['errorMessage'])) {
+      return $contadores;
+    }
+
+    $recuperacion = null;
+    foreach ($recuperaciones as $item) {
+      if (($item['baseDatosNombre'] ?? null) === $schema) {
+        $recuperacion = $item;
+        break;
+      }
+    }
+    $asistencia = null;
+    foreach ($asistencias as $item) {
+      if (($item['baseDatosNombre'] ?? null) === $schema) {
+        $asistencia = $item;
+        break;
+      }
+    }
+    $justificacion = null;
+    foreach ($justificaciones as $item) {
+      if (($item['baseDatosNombre'] ?? null) === $schema) {
+        $justificacion = $item;
+        break;
+      }
+    }
+    $contador = null;
+    foreach ($contadores as $item) {
+      if (($item['baseDatosNombre'] ?? null) === $schema) {
+        $contador = $item;
+        break;
+      }
+    }
+
+    return [
+      'tecnologicoId' => $proyecto['id'] ?? null,
+      'institucionNombre' => $proyecto['nombre'] ?? null,
+      'baseDatosNombre' => $schema,
+      'url' => $proyecto['url'] ?? null,
+      'fechaConsulta' => $fecha ?: date('Y-m-d'),
+      'recuperaciones' => $recuperacion,
+      'asistencias' => $asistencia,
+      'justificaciones' => $justificacion,
+      'contadores' => $contador,
+    ];
+  }
+
   public static function getRecuperacionesBackup($fecha = null) {
     if (!$fecha) {
       $fecha = date('Y-m-d');
@@ -570,5 +645,76 @@ class Util {
 //      'formato_corto' => implode(' ', $resultadoTexto),
 //      'segundos'      => $segundosTranscurridos
 //    ];
+  }
+
+  public static function getContadoresDashboard($fecha = null): array {
+    if (!$fecha) {
+      $fecha = date('Y-m-d');
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
+      return ['errorMessage' => 'Fecha no válida. El formato debe ser YYYY-MM-DD.'];
+    }
+
+    try {
+      $db = Yii::$app->db;
+      $resultados = [];
+      foreach (self::getProyectos() as $proyecto) {
+        $contadores = $db->createCommand("
+          SELECT
+            COUNT(a.id) AS total,
+            SUM(CASE WHEN a.revision_incidencia = :no AND a.status_proceso NOT IN (:proceso, :completado) THEN 1 ELSE 0 END) AS pendientes,
+            SUM(CASE WHEN a.revision_incidencia = :no AND a.status_proceso NOT IN (:pendiente, :completado) THEN 1 ELSE 0 END) AS iniciadas,
+            SUM(CASE WHEN a.incidencia = :ninguna AND a.status_proceso = :completado THEN 1 ELSE 0 END) AS correctas,
+            SUM(CASE WHEN a.incidencia != :ninguna AND a.status_proceso = :completado THEN 1 ELSE 0 END) AS con_incidencia
+          FROM {$proyecto['schema']}.asistencias AS a
+          WHERE a.fecha = :fecha AND a.status = :status AND a.fecha_eliminacion IS NULL
+        ")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+            ':no' => 0,
+            ':proceso' => 1,
+            ':completado' => 2,
+            ':pendiente' => 0,
+            ':ninguna' => 0,
+          ])
+          ->queryOne();
+
+        $cantidadRegistrosBiometricosDia = $db->createCommand("SELECT COUNT(*) FROM {$proyecto['schema']}.checador_log WHERE fecha_checador = :fecha AND status = :status")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+          ])
+          ->queryScalar();
+
+        $cantidadPersonalDia = $db->createCommand("SELECT COUNT(DISTINCT a.personal_id) FROM {$proyecto['schema']}.asistencias AS a WHERE a.fecha = :fecha AND a.status = :status AND a.fecha_eliminacion IS NULL")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+          ])
+          ->queryScalar();
+
+        $resultados[] = [
+          'institucionNombre' => $proyecto['nombre'],
+          'baseDatosNombre' => $proyecto['schema'],
+          'fecha' => $fecha,
+          'total' => (int)($contadores['total'] ?? 0),
+          'pendientes' => (int)($contadores['pendientes'] ?? 0),
+          'iniciadas' => (int)($contadores['iniciadas'] ?? 0),
+          'correctas' => (int)($contadores['correctas'] ?? 0),
+          'conIncidencia' => (int)($contadores['con_incidencia'] ?? 0),
+          'cantidadRegistrosBiometricosDia' => (int)$cantidadRegistrosBiometricosDia,
+          'cantidadPersonalDia' => (int)$cantidadPersonalDia,
+        ];
+      }
+
+      usort($resultados, function ($a, $b) {
+        return strcmp($a['institucionNombre'], $b['institucionNombre']);
+      });
+
+      return $resultados;
+    } catch (\Exception $ex) {
+      return ['errorMessage' => $ex->getMessage()];
+    }
   }
 }

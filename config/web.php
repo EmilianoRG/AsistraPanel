@@ -69,6 +69,9 @@ $config = [
         'POST api/<action:\\w+>' => 'api/<action>',
         // generic controller/action rule
         '<controller:\\w+>/<action:\\w+>' => '<controller>/<action>',
+        'POST api/generate-token' => 'data/generar-token',
+        'api/get-info' => 'data/get-info',
+        'api/error' => 'data/error',
       ],
     ],
     /*

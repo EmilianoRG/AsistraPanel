@@ -1,6 +1,7 @@
 <?php
 namespace app\models;
 
+use Yii;
 use yii\base\BaseObject;
 use yii\web\IdentityInterface;
 
@@ -10,37 +11,45 @@ class User extends BaseObject implements IdentityInterface {
   public string $passwordHash = '';
   public string $authKey = '';
   public string $accessToken = '';
-  private static array $_users = [
-    '100' => [
-      'id' => '100',
-      'username' => 'admin',
-      // password: admin
-      'passwordHash' => '$2y$12$pQh4B6.cbE2vOvuiaHBS7e8HNEJf8t2PrfhF4cOWNtFPJI9J8jT7u',
-      'authKey' => 'test100key',
-      'accessToken' => '100-token',
-    ],
-    '101' => [
-      'id' => '101',
-      'username' => 'demo',
-      // password: demo
-      'passwordHash' => '$2y$13$alRLq1PGVMlGYwS/Y3iy3ewQns1Z8ol8Iq6Zb5k7ZwEhblA1aL29y',
-      'authKey' => 'test101key',
-      'accessToken' => '101-token',
-    ],
-  ];
+  private static ?array $_users = null;
+
+  private static function getUsers(): array
+  {
+    if (self::$_users !== null) {
+      return self::$_users;
+    }
+
+    $app = Yii::$app;
+    if ($app === null) {
+      self::$_users = [];
+      return self::$_users;
+    }
+
+    $users = $app->params['usuarios'] ?? [];
+    self::$_users = is_array($users) ? $users : [];
+
+    return self::$_users;
+  }
 
   /**
    * {@inheritdoc}
    */
   public static function findIdentity($id) {
-    return isset(self::$_users[$id]) ? new static(self::$_users[$id]) : null;
+    $users = self::getUsers();
+    foreach ($users as $user) {
+      if (($user['id'] ?? null) === (string)$id) {
+        return new static($user);
+      }
+    }
+    return null;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function findIdentityByAccessToken($token, $type = null) {
-    foreach (self::$_users as $user) {
+    $users = self::getUsers();
+    foreach ($users as $user) {
       if ($user['accessToken'] === $token) {
         return new static($user);
       }
@@ -56,7 +65,8 @@ class User extends BaseObject implements IdentityInterface {
    * @return static|null
    */
   public static function findByUsername(string $username) {
-    foreach (self::$_users as $user) {
+    $users = self::getUsers();
+    foreach ($users as $user) {
       if (strcasecmp($user['username'], $username) === 0) {
         return new static($user);
       }
