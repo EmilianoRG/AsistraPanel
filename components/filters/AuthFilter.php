@@ -13,9 +13,9 @@ class AuthFilter extends ActionFilter {
   public function beforeAction($action): bool {
     try {
       $headers = Yii::$app->request->headers;
-      if (!$headers->has('Authorization')) {
-        throw new AppException('Autorización denegada (header)', 401);
-      }
+//      if (!$headers->has('Authorization')) {
+//        throw new AppException('Autorización denegada (header)', 401);
+//      }
       $authorization = explode(' ', $headers->get('Authorization'));
       $token = array_pop($authorization);
       $decoded = JWT::decode($token, new Key('+ulbU:aG£B/?5+{[\j>@.0:6rmLt9k9(', 'HS256'));
