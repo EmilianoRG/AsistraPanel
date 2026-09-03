@@ -95,8 +95,8 @@ class Util {
         ],
         'personal' => [
           'cantidadPersonalDia' => (int)($contador['cantidadPersonalDia'] ?? 0),
-          'correctos' => (int)($contador['correctos'] ?? 0),
           'faltas' => (int)($contador['faltas'] ?? 0),
+          'sin_faltas' => (int)($contador['correctos'] ?? 0),
           'retardos_mayores' => (int)($contador['retardos_mayores'] ?? 0),
           'retardos_menores' => (int)($contador['retardos_menores'] ?? 0),
         ],
