@@ -97,8 +97,8 @@ class Util {
           'cantidadPersonalDia' => (int)($contador['cantidadPersonalDia'] ?? 0),
           'correctos' => (int)($contador['correctos'] ?? 0),
           'faltas' => (int)($contador['faltas'] ?? 0),
-          'retardos_mayores' => 0,
-          'retardos_menores' => 0,
+          'retardos_mayores' => (int)($contador['retardos_mayores'] ?? 0),
+          'retardos_menores' => (int)($contador['retardos_menores'] ?? 0),
         ],
       ],
       'recuperaciones' => $recuperacion,
@@ -720,13 +720,43 @@ class Util {
         $contadoresPersonal = $db->createCommand("
           SELECT
             COALESCE(SUM(CASE WHEN px.tiene_falta = 1 THEN 1 ELSE 0 END), 0) AS faltas,
-            COALESCE(SUM(CASE WHEN px.tiene_falta = 0 AND px.total_registros = px.total_completados THEN 1 ELSE 0 END), 0) AS correctos
+            COALESCE(SUM(CASE WHEN px.tiene_falta = 0 AND px.total_registros = px.total_completados THEN 1 ELSE 0 END), 0) AS correctos,
+            COALESCE(SUM(CASE WHEN px.tiene_retardo_mayor = 1 THEN 1 ELSE 0 END), 0) AS retardos_mayores,
+            COALESCE(SUM(CASE WHEN px.tiene_retardo_menor = 1 THEN 1 ELSE 0 END), 0) AS retardos_menores
           FROM (
             SELECT
               a.personal_id,
               COUNT(*) AS total_registros,
               SUM(CASE WHEN a.status_proceso = :completado THEN 1 ELSE 0 END) AS total_completados,
-              MAX(CASE WHEN a.incidencia = :falta THEN 1 ELSE 0 END) AS tiene_falta
+              MAX(CASE WHEN a.incidencia = :falta THEN 1 ELSE 0 END) AS tiene_falta,
+              MAX(CASE
+                WHEN a.status_proceso = :completado
+                  AND a.incidencia IN (:incRetardo, :incRetardoOmitioSalida, :incRetardoFueraHorarioSalida)
+                  AND a.tipo_retardo = :retardoMayor
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM {$proyecto['schema']}.asistencia_justificacion AS aj
+                    INNER JOIN {$proyecto['schema']}.justificaciones AS j ON j.id = aj.justificacion_id
+                    WHERE aj.asistencia_id = a.id
+                      AND j.status = :statusJustificacion
+                      AND j.justifica = :justificaRetardo
+                  )
+                THEN 1 ELSE 0
+              END) AS tiene_retardo_mayor,
+              MAX(CASE
+                WHEN a.status_proceso = :completado
+                  AND a.incidencia IN (:incRetardo, :incRetardoOmitioSalida, :incRetardoFueraHorarioSalida)
+                  AND a.tipo_retardo = :retardoMenor
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM {$proyecto['schema']}.asistencia_justificacion AS aj
+                    INNER JOIN {$proyecto['schema']}.justificaciones AS j ON j.id = aj.justificacion_id
+                    WHERE aj.asistencia_id = a.id
+                      AND j.status = :statusJustificacion
+                      AND j.justifica = :justificaRetardo
+                  )
+                THEN 1 ELSE 0
+              END) AS tiene_retardo_menor
             FROM {$proyecto['schema']}.asistencias AS a
             WHERE a.fecha = :fecha AND a.status = :status AND a.fecha_eliminacion IS NULL
             GROUP BY a.personal_id
@@ -737,6 +767,13 @@ class Util {
             ':status' => 1,
             ':completado' => 2,
             ':falta' => 3,
+            ':incRetardo' => 1,
+            ':incRetardoOmitioSalida' => 2,
+            ':incRetardoFueraHorarioSalida' => 10,
+            ':retardoMenor' => 2,
+            ':retardoMayor' => 3,
+            ':statusJustificacion' => 1,
+            ':justificaRetardo' => 1,
           ])
           ->queryOne();
 
@@ -753,8 +790,8 @@ class Util {
           'cantidadPersonalDia' => (int)$cantidadPersonalDia,
           'correctos' => (int)($contadoresPersonal['correctos'] ?? 0),
           'faltas' => (int)($contadoresPersonal['faltas'] ?? 0),
-          'retardos_mayores' => 0,
-          'retardos_menores' => 0,
+          'retardos_mayores' => (int)($contadoresPersonal['retardos_mayores'] ?? 0),
+          'retardos_menores' => (int)($contadoresPersonal['retardos_menores'] ?? 0),
         ];
       }
 
