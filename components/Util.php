@@ -717,8 +717,18 @@ class Util {
           ])
           ->queryScalar();
         $tablaAsistenciaJustificacion = self::getTablaAsistenciaJustificacion($db, $proyecto['schema']);
+        $filtroFaltaNoJustificada = '';
         $filtroRetardoNoJustificado = '';
         if ($tablaAsistenciaJustificacion) {
+          $filtroFaltaNoJustificada = "
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM {$proyecto['schema']}.{$tablaAsistenciaJustificacion} AS aj
+                    INNER JOIN {$proyecto['schema']}.justificaciones AS j ON j.id = aj.justificacion_id
+                    WHERE aj.asistencia_id = a.id
+                      AND j.status = :statusJustificacion
+                      AND j.justifica = :justificaFalta
+                  )";
           $filtroRetardoNoJustificado = "
                   AND NOT EXISTS (
                     SELECT 1
@@ -741,7 +751,11 @@ class Util {
               a.personal_id,
               COUNT(*) AS total_registros,
               SUM(CASE WHEN a.status_proceso = :completado THEN 1 ELSE 0 END) AS total_completados,
-              MAX(CASE WHEN a.incidencia = :falta THEN 1 ELSE 0 END) AS tiene_falta,
+              MAX(CASE
+                WHEN a.incidencia = :falta
+                  {$filtroFaltaNoJustificada}
+                THEN 1 ELSE 0
+              END) AS tiene_falta,
               MAX(CASE
                 WHEN a.status_proceso = :completado
                   AND a.incidencia IN (:incRetardo, :incRetardoOmitioSalida, :incRetardoFueraHorarioSalida)
@@ -773,6 +787,7 @@ class Util {
             ':retardoMayor' => 3,
             ':statusJustificacion' => 1,
             ':justificaRetardo' => 1,
+            ':justificaFalta' => 4,
           ])
           ->queryOne();
 
@@ -810,16 +825,16 @@ class Util {
       FROM information_schema.tables AS t
       WHERE t.table_schema = :schema
         AND t.table_name IN (
+          'asistencias_justificaciones',
           'asistencia_justificacion',
           'asistencia_justificaciones',
-          'asistencias_justificacion',
-          'asistencias_justificaciones'
+          'asistencias_justificacion'
         )
       ORDER BY CASE t.table_name
-        WHEN 'asistencia_justificacion' THEN 1
-        WHEN 'asistencia_justificaciones' THEN 2
-        WHEN 'asistencias_justificacion' THEN 3
-        WHEN 'asistencias_justificaciones' THEN 4
+        WHEN 'asistencias_justificaciones' THEN 1
+        WHEN 'asistencia_justificacion' THEN 2
+        WHEN 'asistencia_justificaciones' THEN 3
+        WHEN 'asistencias_justificacion' THEN 4
         ELSE 99
       END
       LIMIT 1
