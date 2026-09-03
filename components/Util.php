@@ -84,20 +84,26 @@ class Util {
       'url' => $proyecto['url'] ?? null,
       'fechaConsulta' => $fecha ?: date('Y-m-d'),
       'personal_activo' => $personalActivo,
+      'resumen' => [
+        'asistencias' => [
+          'total' => (int)($contador['total'] ?? 0),
+          'pendientes' => (int)($contador['pendientes'] ?? 0),
+          'iniciadas' => (int)($contador['iniciadas'] ?? 0),
+          'correctas' => (int)($contador['correctas'] ?? 0),
+          'conIncidencia' => (int)($contador['conIncidencia'] ?? 0),
+          'cantidadRegistrosBiometricosDia' => (int)($contador['cantidadRegistrosBiometricosDia'] ?? 0),
+        ],
+        'personal' => [
+          'cantidadPersonalDia' => (int)($contador['cantidadPersonalDia'] ?? 0),
+          'correctos' => (int)($contador['correctos'] ?? 0),
+          'faltas' => (int)($contador['faltas'] ?? 0),
+          'retardos_mayores' => 0,
+          'retardos_menores' => 0,
+        ],
+      ],
       'recuperaciones' => $recuperacion,
-      'asistencias' => [
-        'total' => (int)($contador['total'] ?? 0),
-        'pendientes' => (int)($contador['pendientes'] ?? 0),
-        'iniciadas' => (int)($contador['iniciadas'] ?? 0),
-        'correctas' => (int)($contador['correctas'] ?? 0),
-        'conIncidencia' => (int)($contador['conIncidencia'] ?? 0),
-        'cantidadRegistrosBiometricosDia' => (int)($contador['cantidadRegistrosBiometricosDia'] ?? 0),
-      ],
-      'personal_checadas' => [
-        'cantidadPersonalDia' => (int)($contador['cantidadPersonalDia'] ?? 0),
-      ],
       'justificaciones' => $justificacion,
-      'asistencias_detalle' => $asistencia,
+      'asistencias' => $asistencia,
     ];
   }
 
@@ -711,6 +717,29 @@ class Util {
           ])
           ->queryScalar();
 
+        $contadoresPersonal = $db->createCommand("
+          SELECT
+            COALESCE(SUM(CASE WHEN px.tiene_falta = 1 THEN 1 ELSE 0 END), 0) AS faltas,
+            COALESCE(SUM(CASE WHEN px.tiene_falta = 0 AND px.total_registros = px.total_completados THEN 1 ELSE 0 END), 0) AS correctos
+          FROM (
+            SELECT
+              a.personal_id,
+              COUNT(*) AS total_registros,
+              SUM(CASE WHEN a.status_proceso = :completado THEN 1 ELSE 0 END) AS total_completados,
+              MAX(CASE WHEN a.incidencia = :falta THEN 1 ELSE 0 END) AS tiene_falta
+            FROM {$proyecto['schema']}.asistencias AS a
+            WHERE a.fecha = :fecha AND a.status = :status AND a.fecha_eliminacion IS NULL
+            GROUP BY a.personal_id
+          ) AS px
+        ")
+          ->bindValues([
+            ':fecha' => $fecha,
+            ':status' => 1,
+            ':completado' => 2,
+            ':falta' => 3,
+          ])
+          ->queryOne();
+
         $resultados[] = [
           'institucionNombre' => $proyecto['nombre'],
           'baseDatosNombre' => $proyecto['schema'],
@@ -722,6 +751,10 @@ class Util {
           'conIncidencia' => (int)($contadores['con_incidencia'] ?? 0),
           'cantidadRegistrosBiometricosDia' => (int)$cantidadRegistrosBiometricosDia,
           'cantidadPersonalDia' => (int)$cantidadPersonalDia,
+          'correctos' => (int)($contadoresPersonal['correctos'] ?? 0),
+          'faltas' => (int)($contadoresPersonal['faltas'] ?? 0),
+          'retardos_mayores' => 0,
+          'retardos_menores' => 0,
         ];
       }
 
