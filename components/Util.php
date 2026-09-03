@@ -25,6 +25,7 @@ class Util {
     }
 
     $schema = $proyecto['schema'];
+    $db = Yii::$app->db;
     $recuperaciones = self::getRecuperaciones($fecha);
     if (isset($recuperaciones['errorMessage'])) {
       return $recuperaciones;
@@ -70,6 +71,11 @@ class Util {
         break;
       }
     }
+    $personalActivo = (int)$db->createCommand("SELECT COUNT(*) FROM {$schema}.personal WHERE status = :status")
+      ->bindValues([
+        ':status' => 1,
+      ])
+      ->queryScalar();
 
     return [
       'tecnologicoId' => $proyecto['id'] ?? null,
@@ -77,10 +83,21 @@ class Util {
       'baseDatosNombre' => $schema,
       'url' => $proyecto['url'] ?? null,
       'fechaConsulta' => $fecha ?: date('Y-m-d'),
+      'personal_activo' => $personalActivo,
       'recuperaciones' => $recuperacion,
-      'asistencias' => $asistencia,
+      'asistencias' => [
+        'total' => (int)($contador['total'] ?? 0),
+        'pendientes' => (int)($contador['pendientes'] ?? 0),
+        'iniciadas' => (int)($contador['iniciadas'] ?? 0),
+        'correctas' => (int)($contador['correctas'] ?? 0),
+        'conIncidencia' => (int)($contador['conIncidencia'] ?? 0),
+        'cantidadRegistrosBiometricosDia' => (int)($contador['cantidadRegistrosBiometricosDia'] ?? 0),
+      ],
+      'personal_checadas' => [
+        'cantidadPersonalDia' => (int)($contador['cantidadPersonalDia'] ?? 0),
+      ],
       'justificaciones' => $justificacion,
-      'contadores' => $contador,
+      'asistencias_detalle' => $asistencia,
     ];
   }
 
