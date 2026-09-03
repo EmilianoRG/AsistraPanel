@@ -716,6 +716,19 @@ class Util {
             ':status' => 1,
           ])
           ->queryScalar();
+        $tablaAsistenciaJustificacion = self::getTablaAsistenciaJustificacion($db, $proyecto['schema']);
+        $filtroRetardoNoJustificado = '';
+        if ($tablaAsistenciaJustificacion) {
+          $filtroRetardoNoJustificado = "
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM {$proyecto['schema']}.{$tablaAsistenciaJustificacion} AS aj
+                    INNER JOIN {$proyecto['schema']}.justificaciones AS j ON j.id = aj.justificacion_id
+                    WHERE aj.asistencia_id = a.id
+                      AND j.status = :statusJustificacion
+                      AND j.justifica = :justificaRetardo
+                  )";
+        }
 
         $contadoresPersonal = $db->createCommand("
           SELECT
@@ -733,28 +746,14 @@ class Util {
                 WHEN a.status_proceso = :completado
                   AND a.incidencia IN (:incRetardo, :incRetardoOmitioSalida, :incRetardoFueraHorarioSalida)
                   AND a.tipo_retardo = :retardoMayor
-                  AND NOT EXISTS (
-                    SELECT 1
-                    FROM {$proyecto['schema']}.asistencia_justificacion AS aj
-                    INNER JOIN {$proyecto['schema']}.justificaciones AS j ON j.id = aj.justificacion_id
-                    WHERE aj.asistencia_id = a.id
-                      AND j.status = :statusJustificacion
-                      AND j.justifica = :justificaRetardo
-                  )
+                  {$filtroRetardoNoJustificado}
                 THEN 1 ELSE 0
               END) AS tiene_retardo_mayor,
               MAX(CASE
                 WHEN a.status_proceso = :completado
                   AND a.incidencia IN (:incRetardo, :incRetardoOmitioSalida, :incRetardoFueraHorarioSalida)
                   AND a.tipo_retardo = :retardoMenor
-                  AND NOT EXISTS (
-                    SELECT 1
-                    FROM {$proyecto['schema']}.asistencia_justificacion AS aj
-                    INNER JOIN {$proyecto['schema']}.justificaciones AS j ON j.id = aj.justificacion_id
-                    WHERE aj.asistencia_id = a.id
-                      AND j.status = :statusJustificacion
-                      AND j.justifica = :justificaRetardo
-                  )
+                  {$filtroRetardoNoJustificado}
                 THEN 1 ELSE 0
               END) AS tiene_retardo_menor
             FROM {$proyecto['schema']}.asistencias AS a
@@ -803,5 +802,51 @@ class Util {
     } catch (\Exception $ex) {
       return ['errorMessage' => $ex->getMessage()];
     }
+  }
+
+  private static function getTablaAsistenciaJustificacion(\yii\db\Connection $db, string $schema): ?string {
+    $tabla = $db->createCommand("
+      SELECT t.table_name
+      FROM information_schema.tables AS t
+      WHERE t.table_schema = :schema
+        AND t.table_name IN (
+          'asistencia_justificacion',
+          'asistencia_justificaciones',
+          'asistencias_justificacion',
+          'asistencias_justificaciones'
+        )
+      ORDER BY CASE t.table_name
+        WHEN 'asistencia_justificacion' THEN 1
+        WHEN 'asistencia_justificaciones' THEN 2
+        WHEN 'asistencias_justificacion' THEN 3
+        WHEN 'asistencias_justificaciones' THEN 4
+        ELSE 99
+      END
+      LIMIT 1
+    ")
+      ->bindValue(':schema', $schema)
+      ->queryScalar();
+
+    if ($tabla) {
+      return (string)$tabla;
+    }
+
+    $tabla = $db->createCommand("
+      SELECT c.table_name
+      FROM information_schema.columns AS c
+      WHERE c.table_schema = :schema
+        AND c.column_name IN ('asistencia_id', 'justificacion_id')
+      GROUP BY c.table_name
+      HAVING COUNT(DISTINCT c.column_name) = 2
+      ORDER BY CASE
+        WHEN c.table_name LIKE '%asistencia%justificacion%' THEN 0
+        ELSE 1
+      END, c.table_name
+      LIMIT 1
+    ")
+      ->bindValue(':schema', $schema)
+      ->queryScalar();
+
+    return $tabla ? (string)$tabla : null;
   }
 }
