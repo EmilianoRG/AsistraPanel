@@ -36,11 +36,11 @@ class DataController extends ActiveController {
   public function actionGetInfo() {
     Yii::$app->response->format = Response::FORMAT_JSON;
     try {
-      $model = new DynamicModel(['tecnologicoId', 'fecha']);
+      $model = new DynamicModel(['tecnologicoId', 'fecha', 'fecha_inicio', 'fecha_fin']);
       $model->addRule(['tecnologicoId'], 'required');
       $model->addRule(['tecnologicoId'], 'string');
-      $model->addRule(['fecha'], 'string');
-      $model->addRule(['fecha'], 'match', [
+      $model->addRule(['fecha', 'fecha_inicio', 'fecha_fin'], 'string');
+      $model->addRule(['fecha', 'fecha_inicio', 'fecha_fin'], 'match', [
         'pattern' => '/^\d{4}-\d{2}-\d{2}$/',
         'message' => 'Fecha no válida. El formato debe ser YYYY-MM-DD.'
       ]);
@@ -54,7 +54,30 @@ class DataController extends ActiveController {
         throw $appException;
       }
 
-      $resumen = Util::getResumenTecnologico($model->tecnologicoId, $model->fecha ?: null);
+      $fecha = trim((string)$model->fecha);
+      $fechaInicio = trim((string)$model->fecha_inicio);
+      $fechaFin = trim((string)$model->fecha_fin);
+
+      $tieneFecha = $fecha !== '';
+      $tieneRango = $fechaInicio !== '' || $fechaFin !== '';
+
+      if ($tieneFecha && $tieneRango) {
+        throw new AppException('Parámetros inválidos. Usa solo "fecha" o el par "fecha_inicio" y "fecha_fin".', 400);
+      }
+      if (!$tieneFecha && !$tieneRango) {
+        throw new AppException('Parámetros inválidos. Debes enviar "fecha" o "fecha_inicio" y "fecha_fin".', 400);
+      }
+      if ($tieneRango && ($fechaInicio === '' || $fechaFin === '')) {
+        throw new AppException('Parámetros inválidos. Para rango debes enviar ambos: "fecha_inicio" y "fecha_fin".', 400);
+      }
+      if ($tieneRango && strtotime($fechaInicio) > strtotime($fechaFin)) {
+        throw new AppException('Parámetros inválidos. "fecha_inicio" no puede ser mayor que "fecha_fin".', 400);
+      }
+
+      $consultaInicio = $tieneFecha ? $fecha : $fechaInicio;
+      $consultaFin = $tieneFecha ? $fecha : $fechaFin;
+
+      $resumen = Util::getResumenTecnologico($model->tecnologicoId, $consultaInicio, $consultaFin);
       if (isset($resumen['errorMessage'])) {
         if ($resumen['errorMessage'] === 'No existe un tecnológico con el id proporcionado.') {
           throw new AppException($resumen['errorMessage'], 404);

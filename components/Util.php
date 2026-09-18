@@ -18,93 +18,145 @@ class Util {
     return null;
   }
 
-  public static function getResumenTecnologico(string $tecnologicoId, $fecha = null): array {
+  public static function getResumenTecnologico(string $tecnologicoId, $fechaInicio = null, $fechaFin = null): array {
     $proyecto = self::getProyectoById($tecnologicoId);
     if (!$proyecto) {
       return ['errorMessage' => 'No existe un tecnológico con el id proporcionado.'];
     }
 
+    if (!$fechaInicio) {
+      $fechaInicio = date('Y-m-d');
+    }
+    if (!$fechaFin) {
+      $fechaFin = $fechaInicio;
+    }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaInicio) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaFin)) {
+      return ['errorMessage' => 'Fecha no válida. El formato debe ser YYYY-MM-DD.'];
+    }
+    if (strtotime($fechaInicio) > strtotime($fechaFin)) {
+      return ['errorMessage' => 'El rango de fechas no es válido. fecha_inicio no puede ser mayor que fecha_fin.'];
+    }
+
     $schema = $proyecto['schema'];
     $db = Yii::$app->db;
-    $recuperaciones = self::getRecuperaciones($fecha);
+
+    $acumuladoAsistencias = [
+      'total' => 0,
+      'pendientes' => 0,
+      'iniciadas' => 0,
+      'correctas' => 0,
+      'conIncidencia' => 0,
+      'cantidadRegistrosBiometricosDia' => 0,
+    ];
+    $acumuladoPersonal = [
+      'cantidadPersonalDia' => 0,
+      'faltas' => 0,
+      'sin_faltas' => 0,
+      'retardos_mayores' => 0,
+      'retardos_menores' => 0,
+    ];
+    $problemasRecuperacion = false;
+    $fechasProblemasRecuperacion = [];
+
+    $cursor = strtotime($fechaInicio);
+    $fin = strtotime($fechaFin);
+    while ($cursor <= $fin) {
+      $fechaActual = date('Y-m-d', $cursor);
+
+      $recuperacionesDia = self::getRecuperaciones($fechaActual);
+      if (isset($recuperacionesDia['errorMessage'])) {
+        return $recuperacionesDia;
+      }
+      $contadoresDia = self::getContadoresDashboard($fechaActual);
+      if (isset($contadoresDia['errorMessage'])) {
+        return $contadoresDia;
+      }
+
+      $recuperacionDia = self::findBySchema($recuperacionesDia, $schema);
+      if ((int)($recuperacionDia['incompletos'] ?? 0) > 0) {
+        $problemasRecuperacion = true;
+        $fechasProblemasRecuperacion[] = $fechaActual;
+      }
+
+      $contadorDia = self::findBySchema($contadoresDia, $schema);
+      if ($contadorDia) {
+        $acumuladoAsistencias['total'] += (int)($contadorDia['total'] ?? 0);
+        $acumuladoAsistencias['pendientes'] += (int)($contadorDia['pendientes'] ?? 0);
+        $acumuladoAsistencias['iniciadas'] += (int)($contadorDia['iniciadas'] ?? 0);
+        $acumuladoAsistencias['correctas'] += (int)($contadorDia['correctas'] ?? 0);
+        $acumuladoAsistencias['conIncidencia'] += (int)($contadorDia['conIncidencia'] ?? 0);
+        $acumuladoAsistencias['cantidadRegistrosBiometricosDia'] += (int)($contadorDia['cantidadRegistrosBiometricosDia'] ?? 0);
+
+        $acumuladoPersonal['cantidadPersonalDia'] += (int)($contadorDia['cantidadPersonalDia'] ?? 0);
+        $acumuladoPersonal['faltas'] += (int)($contadorDia['faltas'] ?? 0);
+        $acumuladoPersonal['sin_faltas'] += (int)($contadorDia['correctos'] ?? 0);
+        $acumuladoPersonal['retardos_mayores'] += (int)($contadorDia['retardos_mayores'] ?? 0);
+        $acumuladoPersonal['retardos_menores'] += (int)($contadorDia['retardos_menores'] ?? 0);
+      }
+
+      $cursor = strtotime('+1 day', $cursor);
+    }
+
+    // Mantener estos bloques en la fecha final para no romper la estructura de respuesta actual.
+    $recuperaciones = self::getRecuperaciones($fechaFin);
     if (isset($recuperaciones['errorMessage'])) {
       return $recuperaciones;
     }
-    $asistencias = self::getAsistencias($fecha);
+    $asistencias = self::getAsistencias($fechaFin);
     if (isset($asistencias['errorMessage'])) {
       return $asistencias;
     }
-    $justificaciones = self::getJustificaciones($fecha);
+    $justificaciones = self::getJustificaciones($fechaFin);
     if (isset($justificaciones['errorMessage'])) {
       return $justificaciones;
     }
-    $contadores = self::getContadoresDashboard($fecha);
-    if (isset($contadores['errorMessage'])) {
-      return $contadores;
-    }
 
-    $recuperacion = null;
-    foreach ($recuperaciones as $item) {
-      if (($item['baseDatosNombre'] ?? null) === $schema) {
-        $recuperacion = $item;
-        break;
-      }
-    }
-    $asistencia = null;
-    foreach ($asistencias as $item) {
-      if (($item['baseDatosNombre'] ?? null) === $schema) {
-        $asistencia = $item;
-        break;
-      }
-    }
-    $justificacion = null;
-    foreach ($justificaciones as $item) {
-      if (($item['baseDatosNombre'] ?? null) === $schema) {
-        $justificacion = $item;
-        break;
-      }
-    }
-    $contador = null;
-    foreach ($contadores as $item) {
-      if (($item['baseDatosNombre'] ?? null) === $schema) {
-        $contador = $item;
-        break;
-      }
-    }
+    $recuperacion = self::findBySchema($recuperaciones, $schema);
+    $asistencia = self::findBySchema($asistencias, $schema);
+    $justificacion = self::findBySchema($justificaciones, $schema);
+
     $personalActivo = (int)$db->createCommand("SELECT COUNT(*) FROM {$schema}.personal WHERE status = :status")
       ->bindValues([
         ':status' => 1,
       ])
       ->queryScalar();
 
+    $errores = [
+      'huboProblemasRecuperacion' => $problemasRecuperacion,
+    ];
+    if ($problemasRecuperacion) {
+      $fechasProblemasRecuperacion = array_values(array_unique($fechasProblemasRecuperacion));
+      sort($fechasProblemasRecuperacion);
+      $errores['fechasConProblemasRecuperacion'] = $fechasProblemasRecuperacion;
+    }
+
     return [
       'tecnologicoId' => $proyecto['id'] ?? null,
       'institucionNombre' => $proyecto['nombre'] ?? null,
       'baseDatosNombre' => $schema,
       'url' => $proyecto['url'] ?? null,
-      'fechaConsulta' => $fecha ?: date('Y-m-d'),
+      'fechaConsulta' => $fechaInicio === $fechaFin ? $fechaInicio : null,
+      'fechaInicioConsulta' => $fechaInicio,
+      'fechaFinConsulta' => $fechaFin,
       'personal_activo' => $personalActivo,
       'resumen' => [
-        'asistencias' => [
-          'total' => (int)($contador['total'] ?? 0),
-          'pendientes' => (int)($contador['pendientes'] ?? 0),
-          'iniciadas' => (int)($contador['iniciadas'] ?? 0),
-          'correctas' => (int)($contador['correctas'] ?? 0),
-          'conIncidencia' => (int)($contador['conIncidencia'] ?? 0),
-          'cantidadRegistrosBiometricosDia' => (int)($contador['cantidadRegistrosBiometricosDia'] ?? 0),
-        ],
-        'personal' => [
-          'cantidadPersonalDia' => (int)($contador['cantidadPersonalDia'] ?? 0),
-          'faltas' => (int)($contador['faltas'] ?? 0),
-          'sin_faltas' => (int)($contador['correctos'] ?? 0),
-          'retardos_mayores' => (int)($contador['retardos_mayores'] ?? 0),
-          'retardos_menores' => (int)($contador['retardos_menores'] ?? 0),
-        ],
+        'asistencias' => $acumuladoAsistencias,
+        'personal' => $acumuladoPersonal,
+        'errores' => $errores,
       ],
       'recuperaciones' => $recuperacion,
       'justificaciones' => $justificacion,
       'asistencias' => $asistencia,
     ];
+  }
+
+  private static function findBySchema(array $items, string $schema): ?array {
+    foreach ($items as $item) {
+      if (($item['baseDatosNombre'] ?? null) === $schema) {
+        return $item;
+      }
+    }
+    return null;
   }
 
   public static function getRecuperacionesBackup($fecha = null) {
