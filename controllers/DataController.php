@@ -5,6 +5,8 @@ use app\components\AppException;
 use app\components\filters\AuthFilter;
 use app\components\Util;
 use Firebase\JWT\JWT;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Yii;
 use yii\base\DynamicModel;
 use yii\filters\VerbFilter;
@@ -21,16 +23,76 @@ class DataController extends ActiveController {
         'class' => VerbFilter::class,
         'actions' => [
           'generar-token' => ['post'],
-//          'get-info' => ['get'],
+          'get-info' => ['get'],
+          'get-dispositivos-status' => ['get'],
         ]
       ],
       'auth' => [
         'class' => AuthFilter::class,
         'only' => [
-          'get-info'
+          'get-info',
+          'get-dispositivos-status',
         ]
       ]
     ]);
+  }
+
+  public function actionGetDispositivosStatus() {
+    Yii::$app->response->format = Response::FORMAT_JSON;
+    try {
+      $model = new DynamicModel(['tecnologicoId', 'onlyDisconnected']);
+      $model->addRule(['tecnologicoId'], 'required');
+      $model->addRule(['tecnologicoId'], 'string');
+      $model->addRule(['onlyDisconnected'], 'safe');
+      if (!($model->load(Yii::$app->request->get(), '') && $model->validate())) {
+        $appException = new AppException('Parámetros inválidos', 400);
+        foreach ($model->getErrors() as $attribute => $errors) {
+          foreach ($errors as $error) {
+            $appException->errorMessages[] = "{$attribute}: {$error}";
+          }
+        }
+        throw $appException;
+      }
+
+      $proyecto = Util::getProyectoById((string)$model->tecnologicoId);
+      if (!$proyecto) {
+        throw new AppException('No existe un tecnológico con el id proporcionado.', 404);
+      }
+      if (empty($proyecto['url'])) {
+        throw new AppException('El tecnológico no tiene configurada la URL del endpoint.', 500);
+      }
+
+      $query = [];
+      $onlyDisconnected = Yii::$app->request->get('onlyDisconnected', null);
+      if ($onlyDisconnected !== null && $onlyDisconnected !== '') {
+        $query['onlyDisconnected'] = $onlyDisconnected;
+      }
+
+      $url = 'https://controldeasistenciastec.com/' . $proyecto['url'] . '/web/api/dispositivos/status';
+      $client = new Client([
+        'timeout' => 20,
+        'connect_timeout' => 10,
+        'http_errors' => false,
+      ]);
+      $response = $client->request('GET', $url, ['query' => $query]);
+
+      Yii::$app->response->statusCode = $response->getStatusCode();
+      $responseBody = (string)$response->getBody();
+      $decoded = json_decode($responseBody, true);
+      if (json_last_error() !== JSON_ERROR_NONE) {
+        return ['raw' => $responseBody];
+      }
+      return $decoded;
+    } catch (AppException $ex) {
+      Yii::$app->response->statusCode = $ex->httpCode;
+      return $ex->toArray();
+    } catch (GuzzleException $ex) {
+      Yii::$app->response->statusCode = 502;
+      return ['errorMessage' => $ex->getMessage()];
+    } catch (\Exception $ex) {
+      Yii::$app->response->statusCode = 500;
+      return ['errorMessage' => $ex->getMessage()];
+    }
   }
 
   public function actionGetInfo() {

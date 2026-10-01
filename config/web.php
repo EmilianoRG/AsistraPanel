@@ -73,6 +73,7 @@ $config = [
         '<controller:\\w+>/<action:\\w+>' => '<controller>/<action>',
         'POST api/generate-token' => 'data/generar-token',
         'api/get-info' => 'data/get-info',
+        'api/get-dispositivos-status' => 'data/get-dispositivos-status',
         'api/error' => 'data/error',
       ],
     ],
