@@ -50,6 +50,17 @@ $this->params['meta_description'] = 'Dashboard para acceder a los reportes y mó
         <div class="col-sm-6 col-md-4">
             <div class="card shadow-sm rounded-3 h-100">
                 <div class="card-body text-center">
+                    <div class="display-6 mb-2">📡</div>
+                    <h5 class="card-title">Dispositivos desconectados</h5>
+                    <p class="card-text small text-muted">Visualiza únicamente los tecnológicos que tienen al menos un dispositivo sin conexión.</p>
+                    <?= Html::a('Ir al módulo', ['site/dispositivos-desconectados'], ['class' => 'btn btn-primary btn-sm']) ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-md-4">
+            <div class="card shadow-sm rounded-3 h-100">
+                <div class="card-body text-center">
                     <div class="display-6 mb-2">🔐</div>
                     <h5 class="card-title">API (simple)</h5>
                     <p class="card-text small text-muted">Acceda a los endpoints públicos mediante la API con API key fija.</p>

@@ -2,6 +2,8 @@
 namespace app\components;
 
 use app\widgets\JustificacionCard;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Yii;
 
 class Util {
@@ -16,6 +18,220 @@ class Util {
       }
     }
     return null;
+  }
+
+  public static function getDispositivosStatusTecnologico(string $tecnologicoId, $onlyDisconnected = null): array {
+    $proyecto = self::getProyectoById($tecnologicoId);
+    if (!$proyecto) {
+      return ['errorMessage' => 'No existe un tecnológico con el id proporcionado.', 'httpCode' => 404];
+    }
+    if (empty($proyecto['url'])) {
+      return ['errorMessage' => 'El tecnológico no tiene configurada la URL del endpoint.', 'httpCode' => 500];
+    }
+
+    $query = [];
+    if ($onlyDisconnected !== null && $onlyDisconnected !== '') {
+      $query['onlyDisconnected'] = $onlyDisconnected;
+    }
+
+    $url = 'https://controldeasistenciastec.com/' . $proyecto['url'] . '/web/api/dispositivos/status';
+    $client = new Client([
+      'timeout' => 20,
+      'connect_timeout' => 10,
+      'http_errors' => false,
+    ]);
+
+    try {
+      $response = $client->request('GET', $url, ['query' => $query]);
+      $statusCode = $response->getStatusCode();
+      $body = (string)$response->getBody();
+      $decoded = json_decode($body, true);
+
+      return [
+        'httpCode' => $statusCode,
+        'body' => $body,
+        'json' => json_last_error() === JSON_ERROR_NONE ? $decoded : null,
+      ];
+    } catch (GuzzleException $ex) {
+      return ['errorMessage' => $ex->getMessage(), 'httpCode' => 502];
+    }
+  }
+
+  public static function getReporteDispositivosDesconectados(): array {
+    $tecnologicos = [];
+    $errores = [];
+
+    foreach (self::getProyectos() as $proyecto) {
+      $tecnologicoId = (string)($proyecto['id'] ?? '');
+      if ($tecnologicoId === '') {
+        $errores[] = [
+          'institucionNombre' => $proyecto['nombre'] ?? 'N/D',
+          'tecnologicoId' => null,
+          'errorMessage' => 'El tecnológico no tiene configurado el campo "id" en params.',
+        ];
+        continue;
+      }
+
+      $response = self::getDispositivosStatusTecnologico($tecnologicoId, 1);
+      if (isset($response['errorMessage'])) {
+        $errores[] = [
+          'institucionNombre' => $proyecto['nombre'] ?? 'N/D',
+          'tecnologicoId' => $tecnologicoId,
+          'errorMessage' => $response['errorMessage'],
+        ];
+        continue;
+      }
+
+      $statusCode = (int)($response['httpCode'] ?? 500);
+      if ($statusCode >= 400) {
+        $errores[] = [
+          'institucionNombre' => $proyecto['nombre'] ?? 'N/D',
+          'tecnologicoId' => $tecnologicoId,
+          'errorMessage' => 'El endpoint del tecnológico respondió con HTTP ' . $statusCode . '.',
+        ];
+        continue;
+      }
+
+      if (!is_array($response['json'] ?? null)) {
+        $errores[] = [
+          'institucionNombre' => $proyecto['nombre'] ?? 'N/D',
+          'tecnologicoId' => $tecnologicoId,
+          'errorMessage' => 'La respuesta del tecnológico no es JSON válido.',
+        ];
+        continue;
+      }
+
+      $dispositivos = self::extraerDispositivos($response['json']);
+      $dispositivosDesconectados = array_values(array_filter($dispositivos, function ($dispositivo): bool {
+        if (!is_array($dispositivo)) {
+          return false;
+        }
+        return self::esDispositivoDesconectado($dispositivo);
+      }));
+
+      if (!$dispositivosDesconectados) {
+        continue;
+      }
+
+      $tecnologicos[] = [
+        'tecnologicoId' => $tecnologicoId,
+        'institucionNombre' => $proyecto['nombre'] ?? '',
+        'baseDatosNombre' => $proyecto['schema'] ?? '',
+        'url' => $proyecto['url'] ?? '',
+        'totalDesconectados' => count($dispositivosDesconectados),
+        'dispositivosDesconectados' => array_map(function (array $dispositivo): array {
+          return [
+            'nombre' => self::obtenerNombreDispositivo($dispositivo),
+            'info' => $dispositivo,
+          ];
+        }, $dispositivosDesconectados),
+      ];
+    }
+
+    usort($tecnologicos, function ($a, $b) {
+      return strcmp((string)$a['institucionNombre'], (string)$b['institucionNombre']);
+    });
+
+    return [
+      'tecnologicos' => $tecnologicos,
+      'errores' => $errores,
+    ];
+  }
+
+  private static function extraerDispositivos(array $payload): array {
+    $candidatos = ['dispositivos', 'devices', 'data', 'items', 'resultados', 'results'];
+    foreach ($candidatos as $key) {
+      if (isset($payload[$key]) && is_array($payload[$key])) {
+        $lista = self::normalizarListaDispositivos($payload[$key]);
+        if ($lista) {
+          return $lista;
+        }
+      }
+    }
+
+    $directa = self::normalizarListaDispositivos($payload);
+    if ($directa) {
+      return $directa;
+    }
+    if (self::pareceDispositivo($payload)) {
+      return [$payload];
+    }
+
+    foreach ($payload as $value) {
+      if (is_array($value)) {
+        $lista = self::extraerDispositivos($value);
+        if ($lista) {
+          return $lista;
+        }
+      }
+    }
+
+    return [];
+  }
+
+  private static function pareceDispositivo(array $value): bool {
+    $keys = ['id', 'nombre', 'name', 'ip', 'status', 'estado', 'connected', 'online'];
+    foreach ($keys as $key) {
+      if (array_key_exists($key, $value)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static function normalizarListaDispositivos(array $value): array {
+    if (!self::isArrayList($value)) {
+      return [];
+    }
+    foreach ($value as $item) {
+      if (!is_array($item)) {
+        return [];
+      }
+    }
+    return $value;
+  }
+
+  private static function isArrayList(array $value): bool {
+    if ($value === []) {
+      return true;
+    }
+    return array_keys($value) === range(0, count($value) - 1);
+  }
+
+  private static function esDispositivoDesconectado(array $dispositivo): bool {
+    $flags = ['connected', 'isConnected', 'online', 'isOnline', 'activo', 'isActive'];
+    foreach ($flags as $key) {
+      if (array_key_exists($key, $dispositivo)) {
+        return !filter_var($dispositivo[$key], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+      }
+    }
+
+    $statusKeys = ['estado', 'status', 'connection_status', 'conexion'];
+    foreach ($statusKeys as $key) {
+      if (!array_key_exists($key, $dispositivo)) {
+        continue;
+      }
+      $valor = strtolower(trim((string)$dispositivo[$key]));
+      if ($valor === '' || $valor === '1' || $valor === 'true' || $valor === 'conectado' || $valor === 'online') {
+        return false;
+      }
+      if ($valor === '0' || $valor === 'false' || strpos($valor, 'desconect') !== false || strpos($valor, 'offline') !== false) {
+        return true;
+      }
+    }
+
+    // Cuando el endpoint remoto recibe onlyDisconnected=1 suele devolver ya filtrado.
+    return true;
+  }
+
+  private static function obtenerNombreDispositivo(array $dispositivo): string {
+    $keys = ['nombre', 'name', 'device_name', 'dispositivo', 'alias', 'modelo', 'id'];
+    foreach ($keys as $key) {
+      if (isset($dispositivo[$key]) && trim((string)$dispositivo[$key]) !== '') {
+        return trim((string)$dispositivo[$key]);
+      }
+    }
+    return 'Dispositivo sin nombre';
   }
 
   public static function getResumenTecnologico(string $tecnologicoId, $fechaInicio = null, $fechaFin = null): array {

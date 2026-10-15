@@ -1,0 +1,46 @@
+.dispositivos-card {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+}
+
+.dispositivo-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #dc3545;
+  border-radius: 0.85rem;
+}
+
+.item-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: 0.75rem;
+  align-items: start;
+  border-bottom: 1px dashed #e2e8f0;
+  padding-bottom: 0.25rem;
+}
+
+.item-row:last-child {
+  border-bottom: 0;
+}
+
+.item-key {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.item-value {
+  font-size: 0.85rem;
+  color: #1e293b;
+  word-break: break-word;
+}

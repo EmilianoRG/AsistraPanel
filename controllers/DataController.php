@@ -5,8 +5,6 @@ use app\components\AppException;
 use app\components\filters\AuthFilter;
 use app\components\Util;
 use Firebase\JWT\JWT;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Yii;
 use yii\base\DynamicModel;
 use yii\filters\VerbFilter;
@@ -54,41 +52,19 @@ class DataController extends ActiveController {
         throw $appException;
       }
 
-      $proyecto = Util::getProyectoById((string)$model->tecnologicoId);
-      if (!$proyecto) {
-        throw new AppException('No existe un tecnológico con el id proporcionado.', 404);
-      }
-      if (empty($proyecto['url'])) {
-        throw new AppException('El tecnológico no tiene configurada la URL del endpoint.', 500);
+      $response = Util::getDispositivosStatusTecnologico((string)$model->tecnologicoId, Yii::$app->request->get('onlyDisconnected', null));
+      if (isset($response['errorMessage'])) {
+        throw new AppException($response['errorMessage'], (int)($response['httpCode'] ?? 500));
       }
 
-      $query = [];
-      $onlyDisconnected = Yii::$app->request->get('onlyDisconnected', null);
-      if ($onlyDisconnected !== null && $onlyDisconnected !== '') {
-        $query['onlyDisconnected'] = $onlyDisconnected;
+      Yii::$app->response->statusCode = (int)$response['httpCode'];
+      if (is_array($response['json'])) {
+        return $response['json'];
       }
-
-      $url = 'https://controldeasistenciastec.com/' . $proyecto['url'] . '/web/api/dispositivos/status';
-      $client = new Client([
-        'timeout' => 20,
-        'connect_timeout' => 10,
-        'http_errors' => false,
-      ]);
-      $response = $client->request('GET', $url, ['query' => $query]);
-
-      Yii::$app->response->statusCode = $response->getStatusCode();
-      $responseBody = (string)$response->getBody();
-      $decoded = json_decode($responseBody, true);
-      if (json_last_error() !== JSON_ERROR_NONE) {
-        return ['raw' => $responseBody];
-      }
-      return $decoded;
+      return ['raw' => (string)$response['body']];
     } catch (AppException $ex) {
       Yii::$app->response->statusCode = $ex->httpCode;
       return $ex->toArray();
-    } catch (GuzzleException $ex) {
-      Yii::$app->response->statusCode = 502;
-      return ['errorMessage' => $ex->getMessage()];
     } catch (\Exception $ex) {
       Yii::$app->response->statusCode = 500;
       return ['errorMessage' => $ex->getMessage()];

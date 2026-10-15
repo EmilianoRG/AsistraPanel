@@ -33,7 +33,7 @@ class SiteController extends Controller {
           ],
           [
             'allow' => true,
-            'actions' => ['index', 'logout', 'verificar-recuperacion', 'asistencias', 'justificaciones'],
+            'actions' => ['index', 'logout', 'verificar-recuperacion', 'asistencias', 'justificaciones', 'dispositivos-desconectados'],
             'roles' => ['@'],
           ]
         ],
@@ -109,6 +109,15 @@ class SiteController extends Controller {
     return $this->render('justificaciones', [
       'fechaHoy' => $fecha,
       'data' => Util::getJustificaciones($fecha)
+    ]);
+  }
+
+  public function actionDispositivosDesconectados(): string {
+    $reporte = Util::getReporteDispositivosDesconectados();
+    return $this->render('dispositivosDesconectados', [
+      'fechaHoy' => date('Y-m-d'),
+      'data' => $reporte['tecnologicos'],
+      'errores' => $reporte['errores'],
     ]);
   }
 }
